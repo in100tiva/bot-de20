@@ -87,6 +87,18 @@ Use este link para adicionar o bot ao seu servidor:
 6. Copie o URL gerado e abra no navegador
 7. Selecione o servidor e autorize
 
+## 📊 Status e Monitoramento em Tempo Real
+
+Acompanhe o status do bot e seu tempo de atividade em tempo real:
+
+🟢 **[Status do Bot em Tempo Real](https://stats.uptimerobot.com/NWYvcHmpYB)**
+
+Esta página mostra:
+- ✅ Status atual do bot (Online/Offline)
+- ⏱️ Tempo de uptime
+- 📈 Histórico de disponibilidade
+- 🔔 Incidentes e manutenções
+
 ## 📖 Comandos de Uso
 
 ### Comando Principal
