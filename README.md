@@ -1,65 +1,83 @@
-# 🎲 Bot D20 - Sistema de Rolagem de Dados para Discord
+# 🚀 GoDevs Daily Challenge Bot
 
-Um bot de Discord especializado em rolagens de dado D20, perfeito para sessões de RPG! Com interface visual moderna, histórico de rolagens e feedback interativo.
+Um bot para Discord desenvolvido em TypeScript focado em impulsionar o aprendizado de alunos de programação. O bot envia missões diárias de construção de componentes para Landing Pages, focando em habilidades de HTML, CSS e JavaScript.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-7289DA.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)
 
-## ✨ Características
+## 📌 Funcionalidades
 
-- 🎯 **Rolagem de D20** - Sistema completo de rolagem de dados d20
-- 🌟 **Feedback Visual** - Embeds coloridos com emojis baseados no resultado
-- 📜 **Histórico** - Acompanhe suas últimas 5 rolagens
-- 🔥 **Críticos Especiais** - Animações especiais para 20 (crítico) e 1 (falha crítica)
-- 🔄 **Botão Interativo** - Role novamente com um clique
-- 👤 **Personalizado** - Exibe avatar e nome do jogador
+- ⏰ **Desafios Diários**: Postagem automática todos os dias às **09:00** (Horário de Brasília).
+- 🎮 **Comando Manual**: Use o comando `!desafio` para disparar uma missão instantaneamente no canal de anúncios.
+- 💻 **Foco em Front-end**: Desafios baseados em requisitos reais de mercado para Landing Pages.
+- 🔗 **Integração com Portal**: Instruções diretas para submissão de código no [Portal GoDevs](https://godevs.in100tiva.com).
+- 🌐 **Sistema Anti-Sleep**: Servidor HTTP integrado para manter o bot online 24h em plataformas como Render e Koyeb.
+- 🎨 **Embeds Estilizados**: Mensagens visuais profissionais com informações detalhadas de cada desafio.
 
-## 📋 Pré-requisitos
+## 📂 Estrutura do Projeto
 
-- [Node.js](https://nodejs.org/) (versão 18 ou superior)
-- Uma conta no [Discord Developer Portal](https://discord.com/developers/applications)
-- Git (para clonar o repositório)
+```
+src/
+├── utils/
+│   ├── challenges.ts   # Banco de dados de missões (descrições e requisitos)
+│   └── scheduler.ts    # Lógica do agendador cron e função de postagem
+└── index.ts            # Ponto de entrada, servidor HTTP e listeners de comandos
+```
 
-## 🚀 Instalação
+## 🛠️ Tecnologias Utilizadas
 
-### 1. Clone o Repositório
+- **[Discord.js v14](https://discord.js.org/)** - API oficial do Discord
+- **[TypeScript](https://www.typescriptlang.org/)** - Superset JavaScript com tipagem segura
+- **[Node-Cron](https://www.npmjs.com/package/node-cron)** - Agendador de tarefas automáticas
+- **[TSX](https://github.com/privatenumber/tsx)** - Executor de TypeScript rápido para desenvolvimento
+- **[Node.js HTTP](https://nodejs.org/)** - Servidor HTTP integrado para manter o bot ativo
+
+## 🚀 Como Executar o Projeto
+
+### Pré-requisitos
+
+- [Node.js](https://nodejs.org/) v18 ou superior
+- Uma aplicação de Bot criada no [Discord Developer Portal](https://discord.com/developers/applications)
+- Um canal no seu servidor chamado exatamente `desafio`
+
+### Instalação
+
+1. Clone o repositório:
 
 ```bash
 git clone https://github.com/in100tiva/bot-de20.git
 cd bot-de20
 ```
 
-### 2. Instale as Dependências
+2. Instale as dependências:
 
 ```bash
 npm install
 ```
 
-### 3. Configure o Token do Bot
+3. Crie um arquivo `.env` na raiz e adicione seu token:
 
-1. Crie um arquivo `.env` na raiz do projeto:
-
-```bash
+```env
 DISCORD_TOKEN=seu_token_aqui
+PORT=8080
 ```
-
-2. Obtenha seu token:
-   - Acesse o [Discord Developer Portal](https://discord.com/developers/applications)
-   - Crie uma nova aplicação (ou use uma existente)
-   - Vá em **Bot** → Copie o **Token**
-   - Cole no arquivo `.env`
 
 ⚠️ **IMPORTANTE:** Nunca compartilhe seu token! O arquivo `.env` já está no `.gitignore`.
 
-### 4. Execute o Bot
+### Desenvolvimento
 
-**Desenvolvimento (com hot-reload):**
+Para rodar o bot localmente com reinicialização automática (hot-reload):
+
 ```bash
 npm run dev
 ```
 
-**Produção:**
+### Produção (Build)
+
+Para compilar e iniciar o bot:
+
 ```bash
 npm run build
 npm start
@@ -67,25 +85,81 @@ npm start
 
 ## 🤖 Adicionar o Bot ao Seu Servidor
 
-### Método 1: Link Direto (Recomendado)
+### Link de Convite
 
 Use este link para adicionar o bot ao seu servidor:
 
 👉 [**CLIQUE AQUI PARA ADICIONAR O BOT**](https://discord.com/oauth2/authorize?client_id=1457450454865940511&permissions=18432&integration_type=0&scope=bot+applications.commands)
 
-### Método 2: Gerar Seu Próprio Link
+### Configuração do Servidor
 
-1. Acesse o [Discord Developer Portal](https://discord.com/developers/applications)
-2. Selecione sua aplicação
-3. Vá em **OAuth2** → **URL Generator**
-4. Marque os seguintes **SCOPES:**
-   - `bot`
-   - `applications.commands`
-5. Marque as seguintes **PERMISSIONS:**
+1. Certifique-se de ter um canal chamado **`desafio`** no seu servidor
+2. O bot precisa das seguintes permissões:
    - `Send Messages` (Enviar Mensagens)
    - `Embed Links` (Incorporar Links)
-6. Copie o URL gerado e abra no navegador
-7. Selecione o servidor e autorize
+   - `Manage Messages` (Gerenciar Mensagens - para deletar comandos)
+
+## 📖 Comandos
+
+### Comando Manual
+
+```
+!desafio
+```
+
+Dispara um desafio aleatório imediatamente no canal `desafio`. O comando é deletado automaticamente após o uso para manter o canal limpo.
+
+### Postagem Automática
+
+O bot posta automaticamente um desafio todos os dias às **09:00** (horário de Brasília) no canal `desafio`.
+
+## 🎯 Exemplo de Desafio
+
+Quando um desafio é postado, ele aparece assim:
+
+```
+📢 ATENÇÃO GODEVS!
+Novo desafio de construção liberado. Quem aceita a missão?
+
+🚀 Missão do Dia: Seção Hero com Background Dinâmico
+Construa a seção principal de uma landing page (Hero Section) que seja impactante.
+
+🛠️ Requisitos Técnicos:
+• Título (H1) centralizado com sombra suave.
+• Botão de CTA que muda de cor e aumenta levemente no hover.
+• Fundo com um gradiente animado ou uma imagem de alta qualidade com overlay escuro.
+
+📊 Dificuldade: Médio
+🔗 Entrega: Portal GoDevs
+
+Daily Challenge • Foco em Landing Pages
+```
+
+## ☁️ Hospedagem (Render / Koyeb)
+
+### Deploy no Render
+
+1. Crie uma conta em [Render.com](https://render.com)
+2. Clique em **"New +"** → **"Web Service"**
+3. Conecte seu repositório GitHub
+4. Configure:
+   - **Name:** godevs-challenge-bot
+   - **Environment:** Node
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+
+### Variáveis de Ambiente
+
+No painel do Render/Koyeb, adicione:
+
+| Variável | Valor | Obrigatório |
+|----------|-------|-------------|
+| `DISCORD_TOKEN` | Seu token do bot | ✅ Sim |
+| `PORT` | 8080 | ⚠️ Opcional (definido automaticamente) |
+
+### Dica: Monitoramento 24h
+
+Utilize o [UptimeRobot](https://uptimerobot.com/) para monitorar a URL gerada pela hospedagem e evitar que o bot entre em modo de suspensão.
 
 ## 📊 Status e Monitoramento em Tempo Real
 
@@ -99,110 +173,75 @@ Esta página mostra:
 - 📈 Histórico de disponibilidade
 - 🔔 Incidentes e manutenções
 
-## 📖 Comandos de Uso
+## 🎓 Desafios Disponíveis
 
-### Comando Principal
+O bot atualmente possui os seguintes desafios (mais serão adicionados):
 
+1. **Seção Hero com Background Dinâmico** (Médio)
+2. **Menu Sticky com Efeito de Scroll** (Fácil)
+3. **Seção de Depoimentos com Grid** (Médio)
+
+### Adicionar Novos Desafios
+
+Para adicionar novos desafios, edite o arquivo `src/utils/challenges.ts`:
+
+```typescript
+{
+    id: 4,
+    title: "Seu Novo Desafio",
+    difficulty: 'Fácil', // ou 'Médio' ou 'Difícil'
+    description: "Descrição do desafio aqui",
+    requirements: [
+        "Requisito 1",
+        "Requisito 2",
+        "Requisito 3"
+    ]
+}
 ```
-d20
-```
-
-Rola um dado de 20 lados (D20) e exibe o resultado em um embed estilizado.
-
-### 🎯 Tipos de Resultado
-
-| Valor | Tipo | Cor | Descrição |
-|-------|------|-----|-----------|
-| **20** | 🌟 SUCESSO CRÍTICO | Dourado | Acerto perfeito! |
-| **15-19** | ✅ Ótimo Resultado | Verde | Rolagem alta |
-| **2-14** | 🎲 Rolagem Normal | Azul | Rolagem padrão |
-| **1** | 💀 FALHA CRÍTICA | Vermelho | Erro crítico! |
-
-### 🔄 Botão Interativo
-
-Após cada rolagem, um botão **"Rolar Novamente"** aparece:
-- Clique para fazer uma nova rolagem
-- O histórico é atualizado automaticamente
-- A mensagem é atualizada (não cria spam no chat)
-
-### 📜 Histórico de Rolagens
-
-Cada embed mostra seus últimos 5 resultados:
-```
-📜 Histórico Recente (Últimos 5)
-12 → 7 → 18 → 20 → 3
-```
-
-## 🏗️ Estrutura do Projeto
-
-```
-d20/
-├── src/
-│   ├── commands/
-│   │   └── d20.ts          # Lógica do comando de rolagem
-│   ├── utils/
-│   │   └── dice.ts         # Funções utilitárias de dados
-│   └── index.ts            # Arquivo principal do bot
-├── .env                     # Variáveis de ambiente (não commitado)
-├── .gitignore              # Arquivos ignorados pelo Git
-├── package.json            # Dependências e scripts
-├── tsconfig.json           # Configuração do TypeScript
-└── README.md               # Este arquivo
-```
-
-## 🛠️ Tecnologias Utilizadas
-
-- **[Discord.js v14](https://discord.js.org/)** - Biblioteca para interagir com a API do Discord
-- **[TypeScript](https://www.typescriptlang.org/)** - Superset JavaScript com tipagem
-- **[Node.js](https://nodejs.org/)** - Ambiente de execução JavaScript
-- **[dotenv](https://www.npmjs.com/package/dotenv)** - Gerenciamento de variáveis de ambiente
 
 ## 📦 Scripts Disponíveis
 
 | Script | Comando | Descrição |
 |--------|---------|-----------|
-| **Dev** | `npm run dev` | Executa em modo desenvolvimento com tsx |
+| **Dev** | `npm run dev` | Executa em modo desenvolvimento com watch mode |
 | **Build** | `npm run build` | Compila TypeScript para JavaScript |
 | **Start** | `npm start` | Inicia o bot compilado em produção |
 
-## 🌐 Deploy em Produção (Render)
+## 🔧 Configuração do Cron
 
-### 1. Configure o Repositório
+O agendador está configurado em `src/utils/scheduler.ts`:
 
-O projeto já está configurado para deploy! Os scripts necessários estão no `package.json`.
-
-### 2. Configure no Render
-
-1. Crie uma conta em [Render.com](https://render.com)
-2. Clique em **"New +"** → **"Web Service"**
-3. Conecte seu repositório GitHub
-4. Configure:
-   - **Name:** bot-d20
-   - **Environment:** Node
-   - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm start`
-
-### 3. Adicione Variáveis de Ambiente
-
-No painel do Render, vá em **Environment** e adicione:
-
-```
-DISCORD_TOKEN=seu_token_aqui
+```typescript
+cron.schedule('0 0 9 * * *', async () => {
+    // Executa todos os dias às 09:00
+    await postarDesafio(client);
+}, {
+    scheduled: true,
+    timezone: "America/Sao_Paulo"
+});
 ```
 
-### 4. Deploy
-
-Clique em **"Create Web Service"** e aguarde o deploy!
+Para alterar o horário, modifique a expressão cron:
+- `0 0 9 * * *` = 09:00 todos os dias
+- `0 0 18 * * *` = 18:00 todos os dias
+- `0 0 12 * * 1` = 12:00 toda segunda-feira
 
 ## 🤝 Contribuindo
 
 Contribuições são bem-vindas! Sinta-se à vontade para:
 
 1. Fazer um Fork do projeto
-2. Criar uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
+2. Criar uma branch para sua feature (`git checkout -b feature/NovoDesafio`)
+3. Commit suas mudanças (`git commit -m 'Adiciona novo desafio'`)
+4. Push para a branch (`git push origin feature/NovoDesafio`)
 5. Abrir um Pull Request
+
+### Como Contribuir com Novos Desafios
+
+1. Edite `src/utils/challenges.ts`
+2. Adicione um novo objeto `Challenge` seguindo o padrão existente
+3. Teste localmente com `!desafio`
+4. Envie um Pull Request com descrição detalhada
 
 ## 🐛 Reportar Bugs
 
@@ -210,7 +249,7 @@ Encontrou um bug? Abra uma [issue](https://github.com/in100tiva/bot-de20/issues)
 - Descrição do problema
 - Passos para reproduzir
 - Comportamento esperado vs atual
-- Screenshots (se aplicável)
+- Logs do console (se aplicável)
 
 ## 📝 Licença
 
@@ -222,33 +261,17 @@ Desenvolvido com ❤️ por **in100tiva**
 
 ---
 
-## 📸 Screenshots
+## 🎯 Roadmap
 
-### Rolagem Normal
-```
-🎲 Rolagem de Dado
-Dado: 1d20
-Resultado: ✨ 12
-📜 Histórico Recente: 7 → 18 → 20
-```
-
-### Sucesso Crítico (20)
-```
-🌟 SUCESSO CRÍTICO!
-Os deuses sorriem para você!
-Dado: 1d20
-Resultado: 🔥 20
-```
-
-### Falha Crítica (1)
-```
-💀 FALHA CRÍTICA!
-Dado: 1d20
-Resultado: ⚠️ 1
-```
+- [ ] Adicionar mais desafios (meta: 30+ desafios)
+- [ ] Sistema de votação para desafios mais populares
+- [ ] Comando `!stats` para ver estatísticas de participação
+- [ ] Integração com banco de dados para histórico
+- [ ] Sistema de badges/conquistas para participantes
+- [ ] Webhook para notificações de entregas no portal
 
 ---
 
 ⭐ Se este projeto te ajudou, considere dar uma estrela no GitHub!
 
-🎲 **Boas aventuras e boas rolagens!** 🎲
+💻 **Bora codar e evoluir juntos!** 🚀
