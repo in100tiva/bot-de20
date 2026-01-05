@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { Client, TextChannel, EmbedBuilder } from 'discord.js';
+import { Client, TextChannel, EmbedBuilder, ChannelType } from 'discord.js';
 import { dailyChallenges } from './challenges.js';
 import fs from 'fs';
 import path from 'path';
@@ -38,7 +38,7 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
             const disponiveis = dailyChallenges.filter(c => !IDsUsados.includes(c.id));
 
             if (disponiveis.length === 0) {
-                console.log("♻️ Ciclo completo. Resetando...");
+                console.log("♻️ Ciclo completo. Resetando IDs usados...");
                 IDsUsados = [];
                 challenge = dailyChallenges[Math.floor(Math.random() * dailyChallenges.length)];
             } else {
@@ -73,19 +73,20 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
             embeds: [embed] 
         });
 
-        if (channel.type === 5) {
+        // Correção do erro TS2367: Usando o Enum oficial do Discord.js
+        if (channel.type === ChannelType.GuildAnnouncement) {
             await mensagemEnviada.crosspost().catch(() => null);
         }
     }
 };
 
 export const startScheduler = (client: Client) => {
-    // Agendado para as 02:30:00
-    cron.schedule('0 30 2 * * *', async () => {
-        console.log("⏰ Disparando postagem automática (02:30)...");
+    // Horário atualizado para 02:40
+    // Correção do erro TS2353: Removido 'scheduled: true' que não existe mais na tipagem
+    cron.schedule('0 40 2 * * *', async () => {
+        console.log("⏰ Disparando postagem automática (02:40)...");
         await postarDesafio(client);
     }, {
-        scheduled: true,
         timezone: "America/Sao_Paulo"
     });
 };
