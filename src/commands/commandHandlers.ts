@@ -1,12 +1,29 @@
-import { ChatInputCommandInteraction, Client, EmbedBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, Client, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { postarDesafio } from '../utils/scheduler.js';
 import { dailyChallenges } from '../utils/challenges.js';
 import { prisma, userService, goDevsActivityService, badgeService } from '../lib/prisma.js';
 import { fetchGoDevsActivities, checkDiscordIdInGoDevs } from '../lib/supabase.js';
 import { announceMultipleAchievements } from '../utils/announcements.js';
 
+// Comandos que só admins podem usar
+const ADMIN_ONLY_COMMANDS = ['desafio', 'status', 'adicionar', 'limpar', 'agenda'];
+
+// Verifica se o usuário é administrador
+const isAdmin = (interaction: ChatInputCommandInteraction): boolean => {
+    return interaction.memberPermissions?.has(PermissionFlagsBits.Administrator) ?? false;
+};
+
 export const handleSlashCommands = async (interaction: ChatInputCommandInteraction, client: Client) => {
     const { commandName } = interaction;
+
+    // 🔒 Verifica permissão para comandos de admin
+    if (ADMIN_ONLY_COMMANDS.includes(commandName) && !isAdmin(interaction)) {
+        await interaction.reply({
+            content: '🔒 **Acesso Negado**\n\nEste comando é exclusivo para administradores do servidor.\n\n**Comandos disponíveis para você:**\n• `/ranking` - Ver o ranking de usuários\n• `/perfil` - Ver seu perfil e estatísticas\n• `/atualizar` - Sincronizar atividades do GoDevs',
+            ephemeral: true
+        });
+        return;
+    }
 
     try {
         if (commandName === 'desafio') {

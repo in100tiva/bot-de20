@@ -1,0 +1,84 @@
+═══════════════════════════════════════════════════════════════
+                    🤖 BOT GODEVS - COMANDOS
+═══════════════════════════════════════════════════════════════
+
+Olá, GoDevs! 👋
+
+Este bot foi criado para acompanhar seu progresso na comunidade.
+Abaixo estão os comandos disponíveis para você:
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 COMANDOS DISPONÍVEIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏆 /ranking
+   Mostra o TOP 10 usuários com mais atividades entregues.
+   Veja quem está mandando bem na comunidade!
+
+📊 /perfil
+   Mostra suas estatísticas completas:
+   • Quantidade de atividades entregues no GoDevs
+   • Badges conquistadas
+   • Status de vinculação com o GoDevs
+   
+   💡 Dica: Use "/perfil @usuario" para ver o perfil de outra pessoa!
+
+🔄 /atualizar
+   Sincroniza suas atividades do portal GoDevs com o bot.
+   Use este comando após entregar novas atividades para:
+   • Atualizar sua contagem de atividades
+   • Desbloquear novas badges
+   • Aparecer no ranking
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏅 SISTEMA DE BADGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Conquiste badges entregando atividades no GoDevs:
+
+   🔥 Iniciante    →  1 atividade entregue
+   ⚡ Dedicado     →  5 atividades entregues
+   🌟 Expert       →  10 atividades entregues
+   👑 Mestre       →  15 atividades entregues
+   🎖️ Veterano     →  25 atividades entregues
+   🏆 Lenda        →  50 atividades entregues
+
+Quando você conquistar uma badge, será anunciado no canal
+#conquistas para toda a comunidade ver! 🎉
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ IMPORTANTE: VINCULE SEU DISCORD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para que o bot reconheça suas atividades, você precisa
+vincular seu Discord ID ao seu perfil no GoDevs:
+
+1️⃣ Acesse: https://godevs.in100tiva.com
+2️⃣ Faça login na sua conta
+3️⃣ Vá em Configurações do Perfil
+4️⃣ Cole seu Discord ID no campo indicado
+
+💡 Como descobrir seu Discord ID:
+   • Clique com botão direito no seu nome
+   • Selecione "Copiar ID do Usuário"
+   (Se não aparecer, ative o "Modo Desenvolvedor" nas configurações)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📢 DESAFIOS DIÁRIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Todos os dias às 02:40 (horário de Brasília), um novo desafio
+de programação é postado automaticamente no canal #desafio.
+
+Para entregar suas atividades:
+👉 Acesse o portal GoDevs: https://godevs.in100tiva.com
+
+
+═══════════════════════════════════════════════════════════════
+                    Bons estudos! 💻✨
+═══════════════════════════════════════════════════════════════
+
