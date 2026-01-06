@@ -13,17 +13,20 @@ datasource db {
 
 // Modelo de usuários/participantes
 model User {
-  id          String       @id @default(cuid())
-  discordId   String       @unique
-  username    String
-  points      Int          @default(0)
-  streak      Int          @default(0)
-  lastActive  DateTime     @default(now())
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                    String            @id @default(cuid())
+  discordId             String            @unique
+  username              String
+  points                Int               @default(0)
+  streak                Int               @default(0)
+  goDevsActivitiesCount Int               @default(0)  // Cache de atividades do GoDevs
+  lastSyncedAt          DateTime?                      // Última sincronização com GoDevs
+  lastActive            DateTime          @default(now())
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
   
-  submissions Submission[]
-  badges      UserBadge[]
+  submissions           Submission[]
+  badges                UserBadge[]
+  goDevsActivities      GoDevsActivity[]
   
   @@map("users")
 }
@@ -108,6 +111,23 @@ model UserBadge {
   @@unique([userId, badgeId])
   @@map("user_badges")
   @@index([userId])
+}
+
+// Modelo de atividades sincronizadas do GoDevs
+model GoDevsActivity {
+  id            String    @id @default(cuid())
+  supabaseId    String    @unique                // ID original do Supabase
+  userId        String
+  activityName  String
+  activityType  String    @default("CODING")     // CODING ou SEO
+  submittedAt   DateTime
+  syncedAt      DateTime  @default(now())
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("godevs_activities")
+  @@index([userId])
+  @@index([syncedAt])
 }
 
 // Enums

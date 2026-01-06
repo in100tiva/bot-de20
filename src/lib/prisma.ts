@@ -70,6 +70,72 @@ export const userService = {
       },
     });
   },
+
+  // Busca perfil completo com estatísticas unificadas (Discord + GoDevs)
+  async getFullProfile(discordId: string) {
+    const user = await prisma.user.findUnique({
+      where: { discordId },
+      include: {
+        submissions: true,
+        badges: {
+          include: { badge: true },
+        },
+        goDevsActivities: true,
+      },
+    });
+
+    if (!user) return null;
+
+    const approvedSubmissions = user.submissions.filter(s => s.status === 'APPROVED');
+    const pendingSubmissions = user.submissions.filter(s => s.status === 'PENDING');
+    
+    return {
+      ...user,
+      stats: {
+        totalPoints: user.points,
+        streak: user.streak,
+        discordChallenges: approvedSubmissions.length,
+        pendingChallenges: pendingSubmissions.length,
+        goDevsActivities: user.goDevsActivitiesCount,
+        totalUnified: approvedSubmissions.length + user.goDevsActivitiesCount,
+        badges: user.badges,
+        lastSynced: user.lastSyncedAt,
+      },
+    };
+  },
+
+  // Atualiza contagem de atividades GoDevs
+  async updateGoDevsCount(discordId: string, count: number) {
+    return await prisma.user.update({
+      where: { discordId },
+      data: {
+        goDevsActivitiesCount: count,
+        lastSyncedAt: new Date(),
+      },
+    });
+  },
+
+  // Busca ranking com estatísticas completas
+  async getFullRanking(limit: number = 10) {
+    return await prisma.user.findMany({
+      take: limit,
+      orderBy: { points: 'desc' },
+      select: {
+        discordId: true,
+        username: true,
+        points: true,
+        streak: true,
+        goDevsActivitiesCount: true,
+        _count: {
+          select: { 
+            submissions: {
+              where: { status: 'APPROVED' }
+            }
+          },
+        },
+      },
+    });
+  },
 };
 
 // Funções auxiliares para Submissões
@@ -247,6 +313,100 @@ export const badgeService = {
     }
 
     return newBadges;
+  },
+};
+
+// Funções auxiliares para atividades GoDevs (cache local)
+export const goDevsActivityService = {
+  // Sincroniza atividades do Supabase para o cache local
+  async syncActivities(userId: string, activities: Array<{
+    id: string;
+    lesson_name: string;
+    tipo_atividade: string;
+    created_at: string;
+  }>) {
+    // Limpa atividades anteriores do usuário
+    await prisma.goDevsActivity.deleteMany({
+      where: { userId },
+    });
+
+    // Insere novas atividades
+    if (activities.length > 0) {
+      await prisma.goDevsActivity.createMany({
+        data: activities.map(a => ({
+          supabaseId: a.id,
+          userId,
+          activityName: a.lesson_name || 'Atividade sem nome',
+          activityType: a.tipo_atividade || 'CODING',
+          submittedAt: new Date(a.created_at),
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return activities.length;
+  },
+
+  // Busca contagem de atividades do usuário
+  async getCount(userId: string) {
+    return await prisma.goDevsActivity.count({
+      where: { userId },
+    });
+  },
+
+  // Limpa cache de atividades de um usuário
+  async clearForUser(userId: string) {
+    return await prisma.goDevsActivity.deleteMany({
+      where: { userId },
+    });
+  },
+
+  // Lista atividades de um usuário
+  async getForUser(userId: string) {
+    return await prisma.goDevsActivity.findMany({
+      where: { userId },
+      orderBy: { submittedAt: 'desc' },
+    });
+  },
+};
+
+// Funções auxiliares para postagens diárias
+export const dailyPostService = {
+  // Registra postagem diária
+  async recordDailyPost(challengeId: number, channelId: string, messageId: string) {
+    return await prisma.dailyPost.create({
+      data: {
+        challengeId,
+        channelId,
+        messageId,
+      },
+    });
+  },
+
+  // Busca todos os IDs de desafios já postados
+  async getAllPostedChallengeIds(): Promise<number[]> {
+    const postedPosts = await prisma.dailyPost.findMany({
+      select: {
+        challengeId: true,
+      },
+      distinct: ['challengeId'],
+    });
+    return postedPosts.map(post => post.challengeId);
+  },
+
+  // Verifica se um desafio já foi postado
+  async isChallengePosted(challengeId: number): Promise<boolean> {
+    const count = await prisma.dailyPost.count({
+      where: {
+        challengeId,
+      },
+    });
+    return count > 0;
+  },
+
+  // Limpa histórico de postagens
+  async clearAllPosts() {
+    return await prisma.dailyPost.deleteMany({});
   },
 };
 

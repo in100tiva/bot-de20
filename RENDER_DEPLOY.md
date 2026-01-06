@@ -30,8 +30,20 @@ Exemplo: MTQ1NzQ1MDQ1NDg2NTk0MDUxMQ.GXXXxX.XXXXXXXXXXXXXXXXXXXXXXXXXX
 
 ### DATABASE_URL (Prisma Accelerate)
 ```
-prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19jYVBlUHJwTmtTcjg4UWItZzJoMjYiLCJhcGlfa2V5IjoiMDFLRTlRVDBBS0RaWUdCQ1REQ0pWUjEwTUoiLCJ0ZW5hbnRfaWQiOiJlM2U3MTI0MDZlMjE1NWE3NmViNGY0ZmY2ZDgxYzkwOWRjMDE2YTQ2MmRmMmU3NjI0YjJiOTg4MmRjZTUzMzkxIiwiaW50ZXJuYWxfc2VjcmV0IjoiZWZlMmNjNmItMzc3Yy00NGViLWIyZTctNTQzMzQ1MzdjZGJkIn0.vo_LOumvCMvj7ou4fJi67NkA9DYdApFZeo-wfdC_teo
+prisma+postgres://accelerate.prisma-data.net/?api_key=sua_api_key_aqui
 ```
+
+### SUPABASE_URL (Integração GoDevs)
+```
+https://seu-projeto.supabase.co
+```
+⚠️ URL do projeto Supabase GoDevs (Settings > API > Project URL)
+
+### SUPABASE_ANON_KEY (Integração GoDevs)
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx...
+```
+⚠️ Chave anon/public do Supabase (Settings > API > anon public)
 
 ### PORT (Opcional)
 ```
@@ -75,6 +87,8 @@ npm run db:generate
 ### ✅ Variáveis de Ambiente
 - ✅ DISCORD_TOKEN configurado
 - ✅ DATABASE_URL configurado
+- ✅ SUPABASE_URL configurado (integração GoDevs)
+- ✅ SUPABASE_ANON_KEY configurado (integração GoDevs)
 - ✅ PORT configurado (opcional)
 
 ### ✅ Scripts de Build
@@ -117,12 +131,13 @@ npm start
 - ✅ Edge network otimizada
 
 ### Tabelas Criadas
-- ✅ users
+- ✅ users (com campos goDevsActivitiesCount e lastSyncedAt)
 - ✅ challenges (15 desafios)
 - ✅ submissions
 - ✅ daily_posts
 - ✅ badges (6 badges)
 - ✅ user_badges
+- ✅ godevs_activities (cache de atividades do Supabase)
 
 ⚠️ **NÃO execute `db:push` ou `db:seed` no Render!**
 O banco já está configurado e populado.
@@ -201,11 +216,29 @@ Your service is live 🎉
 
 1. ✅ Verificar logs do Render
 2. ✅ Testar comandos no Discord:
-   - `/desafio`
-   - `/status`
-   - `/agenda`
+   - `/desafio` - Envia desafio manualmente
+   - `/status` - Ver desafios enviados
+   - `/agenda` - Info do agendamento
+   - `/entregar` - Entregar solução de desafio
+   - `/ranking` - Ver top 10 usuários
+   - `/perfil` - Ver estatísticas completas
+   - `/atualizar` - Sincronizar atividades do GoDevs
 3. ✅ Resolver permissões do canal #desafio
 4. ✅ Monitorar com UptimeRobot
+
+## 🔗 INTEGRAÇÃO GODEVS
+
+O bot sincroniza atividades do portal GoDevs (https://godevs.in100tiva.com) com o banco local do Discord.
+
+### Como funciona:
+1. Usuário usa `/atualizar` no Discord
+2. Bot busca atividades no Supabase via REST API (timeout 2s)
+3. Atividades são cacheadas no Prisma local
+4. `/perfil` mostra estatísticas unificadas (Discord + GoDevs)
+
+### Requisitos para sincronização:
+- Usuário deve ter `discord_id` cadastrado no perfil GoDevs
+- Variáveis `SUPABASE_URL` e `SUPABASE_ANON_KEY` configuradas no Render
 
 ---
 

@@ -12,7 +12,7 @@ Isso vai registrar todos os comandos slash no Discord. Pode levar alguns minutos
 
 ---
 
-## 📋 Comandos Disponíveis
+## 📋 Comandos de Desafios
 
 ### `/desafio [id?]`
 Envia um desafio manualmente para o canal #desafio
@@ -106,38 +106,99 @@ cron.schedule('0 40 2 * * *', async () => {
 
 ---
 
-## 📊 Arquivo sorteio.json
+## 🎮 Comandos de Gamificação
 
-Estrutura do arquivo que guarda o histórico:
+### `/entregar desafio_id: url:`
+Entrega a solução de um desafio
 
-```json
-{
-  "usados": [1, 3, 5, 7]
-}
-```
+**Parâmetros:**
+- `desafio_id` (obrigatório): ID do desafio (1-15)
+- `url` (obrigatório): Link do repositório GitHub com sua solução
 
-**Localização:** Raiz do projeto (`sorteio.json`)
+**Exemplos:**
+- `/entregar desafio_id:5 url:https://github.com/usuario/meu-projeto`
 
-**Você pode editar manualmente se precisar!**
+**Validações:**
+- ✅ URL deve ser do GitHub
+- ✅ Desafio deve existir
+- ✅ Cria submissão com status "Pendente"
 
 ---
 
-## 🔧 Comandos Legados
+### `/ranking`
+Mostra o top 10 usuários com mais pontos
 
-O comando `!desafio` ainda funciona para compatibilidade:
-- `!desafio` - Desafio aleatório
-- `!desafio 5` - Desafio #5
+**Informações exibidas:**
+- Posição no ranking (🥇🥈🥉 para top 3)
+- Nome do usuário
+- Pontos totais
+- Streak de dias ativos
+- Total de atividades (Discord + GoDevs)
 
-**Mas recomendamos usar os comandos slash (/)!**
+---
+
+### `/perfil [usuario?]`
+Mostra estatísticas completas do usuário
+
+**Parâmetros:**
+- `usuario` (opcional): Usuário para ver o perfil (padrão: você mesmo)
+
+**Informações exibidas:**
+- ⭐ Pontos totais
+- 🔥 Streak de dias
+- ⏳ Entregas pendentes
+- 🎯 Desafios Discord (aprovados)
+- 💻 Atividades GoDevs (sincronizadas)
+- 📊 Total unificado
+- 🏆 Badges conquistadas
+
+**Exemplos:**
+- `/perfil` - Ver seu próprio perfil
+- `/perfil usuario:@JohnDoe` - Ver perfil de outro usuário
+
+---
+
+### `/atualizar`
+Sincroniza suas atividades do GoDevs com o bot
+
+**O que faz:**
+1. Busca atividades no portal GoDevs (via Supabase)
+2. Armazena no cache local (Prisma)
+3. Atualiza contador de atividades
+4. Mostra as 5 atividades mais recentes
+
+**Requisitos:**
+- Seu Discord ID deve estar cadastrado no perfil do GoDevs
+- Acesse [godevs.in100tiva.com](https://godevs.in100tiva.com) para vincular
+
+**Dica:** Use após enviar atividades no GoDevs para atualizar seu perfil!
+
+---
+
+## 📊 Banco de Dados Prisma
+
+O histórico agora é armazenado no banco de dados PostgreSQL (via Prisma Accelerate):
+
+**Tabelas utilizadas:**
+- `users` - Usuários e estatísticas
+- `submissions` - Entregas de desafios
+- `daily_posts` - Histórico de desafios postados
+- `godevs_activities` - Cache de atividades do GoDevs
+
+**Não existe mais o arquivo `sorteio.json`!** Tudo está no banco.
 
 ---
 
 ## ✅ Checklist de Implementação
 
-- [x] Comandos slash criados
+- [x] Comandos slash de desafios
 - [x] Handler de comandos implementado
-- [x] Sistema de histórico (sorteio.json)
-- [x] Funções de manipulação do JSON
+- [x] Sistema de histórico (Prisma)
+- [x] Integração com Supabase GoDevs
+- [x] Comando `/entregar`
+- [x] Comando `/ranking`
+- [x] Comando `/perfil`
+- [x] Comando `/atualizar`
 - [x] Logs detalhados do cron
 - [x] Tratamento de erros melhorado
 - [x] Script de registro de comandos

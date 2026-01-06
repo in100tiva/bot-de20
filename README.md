@@ -1,38 +1,53 @@
 # 🚀 GoDevs Daily Challenge Bot
 
-Um bot para Discord desenvolvido em TypeScript focado em impulsionar o aprendizado de alunos de programação. O bot envia missões diárias de construção de componentes para Landing Pages, focando em habilidades de HTML, CSS e JavaScript.
+Um bot para Discord desenvolvido em TypeScript focado em impulsionar o aprendizado de alunos de programação. O bot envia missões diárias de construção de componentes para Landing Pages, com sistema de gamificação e integração com o portal GoDevs.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-7289DA.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)
+![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748.svg)
 
 ## 📌 Funcionalidades
 
-- ⏰ **Desafios Diários**: Postagem automática todos os dias às **09:00** (Horário de Brasília).
-- 🎮 **Comando Manual**: Use o comando `!desafio` para disparar uma missão instantaneamente no canal de anúncios.
+- ⏰ **Desafios Diários**: Postagem automática todos os dias às **02:40** (Horário de Brasília).
+- 🎮 **Comandos Slash**: Sistema completo de comandos `/` para gerenciar desafios e entregas.
 - 💻 **Foco em Front-end**: Desafios baseados em requisitos reais de mercado para Landing Pages.
-- 🔗 **Integração com Portal**: Instruções diretas para submissão de código no [Portal GoDevs](https://godevs.in100tiva.com).
-- 🌐 **Sistema Anti-Sleep**: Servidor HTTP integrado para manter o bot online 24h em plataformas como Render e Koyeb.
-- 🎨 **Embeds Estilizados**: Mensagens visuais profissionais com informações detalhadas de cada desafio.
+- 🔗 **Integração com Portal GoDevs**: Sincronização de atividades via Supabase REST API.
+- 🏆 **Sistema de Gamificação**: Ranking, pontos, streaks e badges.
+- 📊 **Perfil Unificado**: Estatísticas combinadas do Discord e GoDevs.
+- 🗄️ **Banco de Dados**: PostgreSQL via Prisma Accelerate para alta performance.
+- 🌐 **Sistema Anti-Sleep**: Servidor HTTP integrado para manter o bot online 24h.
 
 ## 📂 Estrutura do Projeto
 
 ```
 src/
+├── commands/
+│   ├── slashCommands.ts    # Definição dos comandos slash
+│   └── commandHandlers.ts  # Lógica dos handlers de comandos
+├── lib/
+│   ├── prisma.ts           # Cliente Prisma + serviços de banco de dados
+│   └── supabase.ts         # Cliente HTTP para integração GoDevs
 ├── utils/
-│   ├── challenges.ts   # Banco de dados de missões (descrições e requisitos)
-│   └── scheduler.ts    # Lógica do agendador cron e função de postagem
-└── index.ts            # Ponto de entrada, servidor HTTP e listeners de comandos
+│   ├── challenges.ts       # Banco de dados de missões
+│   └── scheduler.ts        # Agendador cron e postagem automática
+├── index.ts                # Ponto de entrada do bot
+└── registerCommands.ts     # Script para registrar comandos no Discord
+prisma/
+├── schema.prisma           # Schema do banco de dados
+└── seed.ts                 # Script para popular o banco
 ```
 
 ## 🛠️ Tecnologias Utilizadas
 
 - **[Discord.js v14](https://discord.js.org/)** - API oficial do Discord
 - **[TypeScript](https://www.typescriptlang.org/)** - Superset JavaScript com tipagem segura
+- **[Prisma ORM](https://www.prisma.io/)** - ORM moderno para PostgreSQL
+- **[Prisma Accelerate](https://www.prisma.io/accelerate)** - Cache e connection pooling global
+- **[Supabase](https://supabase.com/)** - Backend para integração com GoDevs
 - **[Node-Cron](https://www.npmjs.com/package/node-cron)** - Agendador de tarefas automáticas
 - **[TSX](https://github.com/privatenumber/tsx)** - Executor de TypeScript rápido para desenvolvimento
-- **[Node.js HTTP](https://nodejs.org/)** - Servidor HTTP integrado para manter o bot ativo
 
 ## 🚀 Como Executar o Projeto
 
@@ -57,14 +72,26 @@ cd bot-de20
 npm install
 ```
 
-3. Crie um arquivo `.env` na raiz e adicione seu token:
+3. Crie um arquivo `.env` na raiz e adicione suas credenciais:
 
 ```env
+# Discord Bot
 DISCORD_TOKEN=seu_token_aqui
+DISCORD_CLIENT_ID=seu_client_id_aqui
+
+# Prisma (PostgreSQL via Accelerate)
+DATABASE_URL=prisma+postgres://accelerate.prisma-data.net/?api_key=sua_api_key
+
+# Integração GoDevs (Supabase)
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=sua_chave_anon_publica
+
+# Opcional
 PORT=8080
+NODE_ENV=development
 ```
 
-⚠️ **IMPORTANTE:** Nunca compartilhe seu token! O arquivo `.env` já está no `.gitignore`.
+⚠️ **IMPORTANTE:** Nunca compartilhe suas credenciais! O arquivo `.env` já está no `.gitignore`.
 
 ### Desenvolvimento
 
@@ -99,19 +126,38 @@ Use este link para adicionar o bot ao seu servidor:
    - `Embed Links` (Incorporar Links)
    - `Manage Messages` (Gerenciar Mensagens - para deletar comandos)
 
-## 📖 Comandos
+## 📖 Comandos Slash
 
-### Comando Manual
+### Comandos de Desafios
 
-```
-!desafio
-```
+| Comando | Descrição |
+|---------|-----------|
+| `/desafio [id?]` | Envia um desafio manualmente (ou específico por ID) |
+| `/status` | Mostra desafios enviados e restantes |
+| `/adicionar id:` | Marca um desafio como enviado |
+| `/limpar` | Reseta histórico de desafios |
+| `/agenda` | Info do agendamento automático |
 
-Dispara um desafio aleatório imediatamente no canal `desafio`. O comando é deletado automaticamente após o uso para manter o canal limpo.
+### Comandos de Gamificação
+
+| Comando | Descrição |
+|---------|-----------|
+| `/entregar desafio_id: url:` | Entrega solução de um desafio |
+| `/ranking` | Top 10 usuários com mais pontos |
+| `/perfil [usuario?]` | Estatísticas completas |
+| `/atualizar` | Sincroniza atividades do GoDevs |
 
 ### Postagem Automática
 
-O bot posta automaticamente um desafio todos os dias às **09:00** (horário de Brasília) no canal `desafio`.
+O bot posta automaticamente um desafio todos os dias às **02:40** (horário de Brasília) no canal `desafio`.
+
+### Registrar Comandos
+
+Execute uma vez para ativar os comandos no Discord:
+
+```bash
+npm run register
+```
 
 ## 🎯 Exemplo de Desafio
 
@@ -155,7 +201,10 @@ No painel do Render/Koyeb, adicione:
 | Variável | Valor | Obrigatório |
 |----------|-------|-------------|
 | `DISCORD_TOKEN` | Seu token do bot | ✅ Sim |
-| `PORT` | 8080 | ⚠️ Opcional (definido automaticamente) |
+| `DATABASE_URL` | Connection string Prisma Accelerate | ✅ Sim |
+| `SUPABASE_URL` | URL do projeto GoDevs | ✅ Sim |
+| `SUPABASE_ANON_KEY` | Chave pública do Supabase | ✅ Sim |
+| `PORT` | 8080 | ⚠️ Opcional |
 
 ### Dica: Monitoramento 24h
 
@@ -204,8 +253,13 @@ Para adicionar novos desafios, edite o arquivo `src/utils/challenges.ts`:
 | Script | Comando | Descrição |
 |--------|---------|-----------|
 | **Dev** | `npm run dev` | Executa em modo desenvolvimento com watch mode |
-| **Build** | `npm run build` | Compila TypeScript para JavaScript |
+| **Build** | `npm run build` | Gera Prisma Client + compila TypeScript |
 | **Start** | `npm start` | Inicia o bot compilado em produção |
+| **Register** | `npm run register` | Registra comandos slash no Discord |
+| **DB Generate** | `npm run db:generate` | Gera Prisma Client |
+| **DB Push** | `npm run db:push` | Aplica schema no banco de dados |
+| **DB Seed** | `npm run db:seed` | Popula o banco com dados iniciais |
+| **DB Studio** | `npm run db:studio` | Abre interface visual do Prisma |
 
 ## 🔧 Configuração do Cron
 
@@ -261,13 +315,37 @@ Desenvolvido com ❤️ por **in100tiva**
 
 ---
 
+## 🔗 Integração GoDevs
+
+O bot sincroniza atividades do portal [GoDevs](https://godevs.in100tiva.com) via Supabase REST API.
+
+### Como funciona:
+
+1. Usuário usa `/atualizar` no Discord
+2. Bot busca atividades na tabela `submitted_activities` do Supabase
+3. Atividades são cacheadas no Prisma local (tabela `godevs_activities`)
+4. `/perfil` mostra estatísticas unificadas (Discord + GoDevs)
+
+### Requisitos para sincronização:
+
+- Usuário deve ter `discord_id` cadastrado no perfil GoDevs
+- Variáveis `SUPABASE_URL` e `SUPABASE_ANON_KEY` configuradas
+
+### Timeout e Performance:
+
+- Timeout de 2 segundos para evitar travar o bot
+- Cache local para respostas rápidas (<1s)
+- Sincronização manual para controle do usuário
+
 ## 🎯 Roadmap
 
+- [x] ~~Integração com banco de dados para histórico~~
+- [x] ~~Sistema de badges/conquistas para participantes~~
+- [x] ~~Comando `/ranking` para estatísticas~~
+- [x] ~~Integração com GoDevs~~
 - [ ] Adicionar mais desafios (meta: 30+ desafios)
 - [ ] Sistema de votação para desafios mais populares
-- [ ] Comando `!stats` para ver estatísticas de participação
-- [ ] Integração com banco de dados para histórico
-- [ ] Sistema de badges/conquistas para participantes
+- [ ] Aprovação automática de entregas com IA
 - [ ] Webhook para notificações de entregas no portal
 
 ---

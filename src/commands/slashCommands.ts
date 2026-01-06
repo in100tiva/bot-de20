@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 export const commands = [
+    // === COMANDOS DE DESAFIOS ===
     new SlashCommandBuilder()
         .setName('desafio')
         .setDescription('Envia um desafio manualmente para o canal')
@@ -31,6 +32,41 @@ export const commands = [
     
     new SlashCommandBuilder()
         .setName('agenda')
-        .setDescription('Mostra informações sobre o agendamento automático')
+        .setDescription('Mostra informações sobre o agendamento automático'),
+
+    // === COMANDOS DE GAMIFICAÇÃO ===
+    new SlashCommandBuilder()
+        .setName('entregar')
+        .setDescription('Entrega a solução de um desafio com link do GitHub')
+        .addIntegerOption(option =>
+            option
+                .setName('desafio_id')
+                .setDescription('ID do desafio que você está entregando')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
+                .setName('url')
+                .setDescription('Link do repositório GitHub com sua solução')
+                .setRequired(true)
+        ),
+    
+    new SlashCommandBuilder()
+        .setName('ranking')
+        .setDescription('Mostra o top 10 usuários com mais pontos'),
+    
+    new SlashCommandBuilder()
+        .setName('perfil')
+        .setDescription('Mostra estatísticas completas: desafios + atividades GoDevs')
+        .addUserOption(option =>
+            option
+                .setName('usuario')
+                .setDescription('Usuário para ver o perfil (opcional, padrão: você)')
+                .setRequired(false)
+        ),
+    
+    new SlashCommandBuilder()
+        .setName('atualizar')
+        .setDescription('Sincroniza suas atividades do GoDevs com o bot')
 ].map(command => command.toJSON());
 
