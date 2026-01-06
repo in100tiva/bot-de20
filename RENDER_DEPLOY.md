@@ -1,0 +1,221 @@
+# 🚀 Deploy no Render - Checklist Completo
+
+## ✅ CONFIGURAÇÕES OBRIGATÓRIAS
+
+### 1. Build Command
+```
+npm install && npm run build
+```
+
+### 2. Start Command
+```
+npm start
+```
+
+### 3. Environment (Versão Node)
+- Node Version: `18.x` ou superior
+- O Render detecta automaticamente via `package.json`
+
+---
+
+## 🔐 VARIÁVEIS DE AMBIENTE OBRIGATÓRIAS
+
+Adicione em **Environment** → **Environment Variables**:
+
+### DISCORD_TOKEN
+```
+Seu token do Discord Bot
+Exemplo: MTQ1NzQ1MDQ1NDg2NTk0MDUxMQ.GXXXxX.XXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+### DATABASE_URL (Prisma Accelerate)
+```
+prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19jYVBlUHJwTmtTcjg4UWItZzJoMjYiLCJhcGlfa2V5IjoiMDFLRTlRVDBBS0RaWUdCQ1REQ0pWUjEwTUoiLCJ0ZW5hbnRfaWQiOiJlM2U3MTI0MDZlMjE1NWE3NmViNGY0ZmY2ZDgxYzkwOWRjMDE2YTQ2MmRmMmU3NjI0YjJiOTg4MmRjZTUzMzkxIiwiaW50ZXJuYWxfc2VjcmV0IjoiZWZlMmNjNmItMzc3Yy00NGViLWIyZTctNTQzMzQ1MzdjZGJkIn0.vo_LOumvCMvj7ou4fJi67NkA9DYdApFZeo-wfdC_teo
+```
+
+### PORT (Opcional)
+```
+8080
+```
+⚠️ O Render define automaticamente, mas podemos fixar em 8080
+
+---
+
+## 📋 DEPENDÊNCIAS VERIFICADAS
+
+### ✅ Dependencies (Produção)
+- `@prisma/client` - ✅ Cliente Prisma (OBRIGATÓRIO em prod)
+- `@prisma/extension-accelerate` - ✅ Cache e performance
+- `discord.js` - ✅ Biblioteca Discord
+- `dotenv` - ✅ Variáveis de ambiente
+- `node-cron` - ✅ Agendador de tarefas
+
+### ✅ DevDependencies (Build apenas)
+- `prisma` - ✅ CLI do Prisma (usado no build)
+- `typescript` - ✅ Compilador
+- `tsx` - ✅ Dev runner
+- `@types/*` - ✅ Tipos TypeScript
+
+---
+
+## 🔍 VERIFICAÇÕES PRÉ-DEPLOY
+
+### ✅ Build Local
+```bash
+npm run build
+```
+**Status:** ✅ Funcionando
+
+### ✅ Prisma Generate
+```bash
+npm run db:generate
+```
+**Status:** ✅ Funcionando
+
+### ✅ Variáveis de Ambiente
+- ✅ DISCORD_TOKEN configurado
+- ✅ DATABASE_URL configurado
+- ✅ PORT configurado (opcional)
+
+### ✅ Scripts de Build
+- `build`: ✅ `prisma generate && tsc`
+- `start`: ✅ `node dist/index.js`
+
+---
+
+## ⚙️ CONFIGURAÇÃO DO RENDER
+
+### Tipo de Serviço
+- **Web Service** (não Background Worker)
+
+### Branch
+- `main`
+
+### Root Directory
+- ` ` (deixe vazio, usa raiz do repo)
+
+### Build Command
+```
+npm install && npm run build
+```
+
+### Start Command
+```
+npm start
+```
+
+### Auto-Deploy
+- ✅ Habilitado (deploy automático no push)
+
+---
+
+## 🗄️ BANCO DE DADOS
+
+### Prisma Accelerate
+- ✅ Connection pooling ativo
+- ✅ Cache global habilitado
+- ✅ Edge network otimizada
+
+### Tabelas Criadas
+- ✅ users
+- ✅ challenges (15 desafios)
+- ✅ submissions
+- ✅ daily_posts
+- ✅ badges (6 badges)
+- ✅ user_badges
+
+⚠️ **NÃO execute `db:push` ou `db:seed` no Render!**
+O banco já está configurado e populado.
+
+---
+
+## 📊 LOGS ESPERADOS NO DEPLOY
+
+### Build (✅ Sucesso):
+```
+Running 'npm install && npm run build'
+✔ Generated Prisma Client
+Build successful 🎉
+```
+
+### Start (✅ Funcionando):
+```
+Running 'npm start'
+✅ Logado como Desafio#3124
+🎯 Servidores: 1
+⏰ Agendador inicializado:
+   📅 Horário: 02:40 (Horário de Brasília)
+   🌍 Timezone: America/Sao_Paulo
+   🔄 Frequência: Todos os dias
+✅ Cron job ativo e aguardando próxima execução!
+Your service is live 🎉
+```
+
+---
+
+## 🚨 POSSÍVEIS ERROS E SOLUÇÕES
+
+### Erro: "Missing Permissions" (50013)
+**Causa:** Bot sem permissões no canal #desafio
+**Solução:** 
+1. Converter canal de "News Channel" para "Text Channel"
+2. Ou dar permissões específicas ao bot
+
+### Erro: "Cannot find module @prisma/client"
+**Causa:** @prisma/client em devDependencies
+**Solução:** ✅ JÁ CORRIGIDO (movido para dependencies)
+
+### Erro: "DATABASE_URL not found"
+**Causa:** Variável de ambiente não configurada
+**Solução:** Adicionar DATABASE_URL nas env vars do Render
+
+### Erro: "Prisma schema validation"
+**Causa:** Schema desatualizado
+**Solução:** ✅ JÁ RESOLVIDO (build regenera automaticamente)
+
+---
+
+## ✅ COMPATIBILIDADE CONFIRMADA
+
+### Node.js
+- ✅ v18.x ou superior (Render suporta)
+- ✅ ES Modules (`"type": "module"`)
+
+### Prisma
+- ✅ v5.22.0 (estável)
+- ✅ Accelerate habilitado
+- ✅ PostgreSQL via connection string
+
+### Discord.js
+- ✅ v14.17.3 (estável)
+- ✅ Intents configurados
+- ✅ Slash commands registrados
+
+### Dependências
+- ✅ Todas compatíveis com Node 18+
+- ✅ Sem vulnerabilidades (npm audit)
+
+---
+
+## 🎯 PRÓXIMOS PASSOS APÓS DEPLOY
+
+1. ✅ Verificar logs do Render
+2. ✅ Testar comandos no Discord:
+   - `/desafio`
+   - `/status`
+   - `/agenda`
+3. ✅ Resolver permissões do canal #desafio
+4. ✅ Monitorar com UptimeRobot
+
+---
+
+## 📞 SUPORTE
+
+- **Logs:** https://dashboard.render.com → Seu serviço → Logs
+- **Prisma Console:** https://console.prisma.io
+- **Discord Developer:** https://discord.com/developers/applications
+
+---
+
+✅ **TUDO VERIFICADO E PRONTO PARA DEPLOY!**
+
