@@ -6,14 +6,18 @@ import path from 'path';
 
 const STORAGE_PATH = path.resolve('sorteio.json');
 
-const getStatusSorteio = () => {
+export const getStatusSorteio = () => {
     if (!fs.existsSync(STORAGE_PATH)) return { usados: [] };
     try { return JSON.parse(fs.readFileSync(STORAGE_PATH, 'utf-8')); } 
     catch (e) { return { usados: [] }; }
 };
 
-const salvarStatusSorteio = (usados: number[]) => {
-    fs.writeFileSync(STORAGE_PATH, JSON.stringify({ usados }));
+export const salvarStatusSorteio = (usados: number[]) => {
+    fs.writeFileSync(STORAGE_PATH, JSON.stringify({ usados }, null, 2));
+};
+
+export const limparHistorico = () => {
+    fs.writeFileSync(STORAGE_PATH, JSON.stringify({ usados: [] }, null, 2));
 };
 
 export const postarDesafio = async (client: Client, idManual: number | null = null) => {
@@ -94,8 +98,17 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
 };
 
 export const startScheduler = (client: Client) => {
+    console.log('⏰ Agendador inicializado:');
+    console.log('   📅 Horário: 02:40 (Horário de Brasília)');
+    console.log('   🌍 Timezone: America/Sao_Paulo');
+    console.log('   🔄 Frequência: Todos os dias');
+    
     cron.schedule('0 40 2 * * *', async () => {
         console.log("⏰ Disparando postagem automática (02:40)...");
         await postarDesafio(client);
-    }, { timezone: "America/Sao_Paulo" });
+    }, { 
+        timezone: "America/Sao_Paulo"
+    });
+    
+    console.log('✅ Cron job ativo e aguardando próxima execução!');
 };
