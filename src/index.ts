@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import * as dotenv from 'dotenv';
 import http from 'http';
 import { startScheduler, postarDesafio } from './utils/scheduler.js';
-import { handleSlashCommands } from './commands/commandHandlers.js';
+import { handleSlashCommands, handleButtonInteraction } from './commands/commandHandlers.js';
 import { badgeService } from './lib/prisma.js';
 
 dotenv.config();
@@ -41,10 +41,19 @@ client.once('clientReady', async (c) => {
     startScheduler(client);
 });
 
-// Comandos Slash (/)
+// Comandos Slash (/) e Botões
 client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isChatInputCommand()) return;
-    await handleSlashCommands(interaction, client);
+    // Comandos slash
+    if (interaction.isChatInputCommand()) {
+        await handleSlashCommands(interaction, client);
+        return;
+    }
+    
+    // Botões interativos
+    if (interaction.isButton()) {
+        await handleButtonInteraction(interaction, client);
+        return;
+    }
 });
 
 // Comando legado (!desafio) - mantido para compatibilidade

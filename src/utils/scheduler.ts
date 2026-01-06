@@ -1,7 +1,8 @@
 import cron from 'node-cron';
 import { Client, EmbedBuilder, ChannelType } from 'discord.js';
 import { dailyChallenges } from './challenges.js';
-import { dailyPostService } from '../lib/prisma.js';
+import { dailyPostService, userService } from '../lib/prisma.js';
+import { postWeeklyTop3 } from './announcements.js';
 
 export const postarDesafio = async (client: Client, idManual: number | null = null) => {
     const guild = client.guilds.cache.first();
@@ -107,16 +108,42 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
 
 export const startScheduler = (client: Client) => {
     console.log('⏰ Agendador inicializado:');
-    console.log('   📅 Horário: 02:40 (Horário de Brasília)');
+    console.log('   📅 Desafio Diário: 02:40 (todos os dias)');
+    console.log('   📊 Ranking Semanal: Segunda-feira às 10:00');
     console.log('   🌍 Timezone: America/Sao_Paulo');
-    console.log('   🔄 Frequência: Todos os dias');
     
+    // 📅 Desafio diário às 02:40
     cron.schedule('0 40 2 * * *', async () => {
         console.log("⏰ Disparando postagem automática (02:40)...");
         await postarDesafio(client);
     }, { 
         timezone: "America/Sao_Paulo"
     });
+
+    // 📊 TOP 3 semanal toda segunda-feira às 10:00
+    cron.schedule('0 0 10 * * 1', async () => {
+        console.log("📊 Disparando ranking semanal (Segunda 10:00)...");
+        try {
+            const ranking = await userService.getFullRanking(10);
+            await postWeeklyTop3(client, ranking);
+        } catch (error: any) {
+            console.error('❌ Erro ao postar ranking semanal:', error.message);
+        }
+    }, { 
+        timezone: "America/Sao_Paulo"
+    });
     
-    console.log('✅ Cron job ativo e aguardando próxima execução!');
+    console.log('✅ Cron jobs ativos e aguardando próximas execuções!');
+};
+
+// Função para postar ranking manualmente (para testes)
+export const postarRankingSemanal = async (client: Client) => {
+    try {
+        const ranking = await userService.getFullRanking(10);
+        await postWeeklyTop3(client, ranking);
+        return true;
+    } catch (error: any) {
+        console.error('❌ Erro ao postar ranking:', error.message);
+        return false;
+    }
 };

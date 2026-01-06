@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction, Client, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { ChatInputCommandInteraction, Client, EmbedBuilder, PermissionFlagsBits, ButtonInteraction } from 'discord.js';
 import { postarDesafio } from '../utils/scheduler.js';
 import { dailyChallenges } from '../utils/challenges.js';
 import { prisma, userService, goDevsActivityService, badgeService } from '../lib/prisma.js';
 import { fetchGoDevsActivities, checkDiscordIdInGoDevs } from '../lib/supabase.js';
-import { announceMultipleAchievements } from '../utils/announcements.js';
+import { announceMultipleAchievements, announceMilestone, createProfileButtons, createRankingButtons } from '../utils/announcements.js';
 
 // Comandos que só admins podem usar
 const ADMIN_ONLY_COMMANDS = ['desafio', 'status', 'adicionar', 'limpar', 'agenda'];
@@ -180,7 +180,10 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 .setFooter({ text: `Top ${ranking.length} usuários • Atualizado agora` })
                 .setTimestamp();
 
-            await interaction.editReply({ embeds: [embed] });
+            // 🔘 Adiciona botões interativos
+            const buttons = createRankingButtons();
+
+            await interaction.editReply({ embeds: [embed], components: [buttons] });
         }
 
         else if (commandName === 'perfil') {
@@ -252,12 +255,15 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             
             embed.setFooter({ 
                 text: stats.lastSynced 
-                    ? `Sincronizado: ${new Date(stats.lastSynced).toLocaleDateString('pt-BR')} • /atualizar`
-                    : 'Nunca sincronizado — use /atualizar'
+                    ? `Sincronizado: ${new Date(stats.lastSynced).toLocaleDateString('pt-BR')}`
+                    : 'Nunca sincronizado'
             })
             .setTimestamp();
 
-            await interaction.editReply({ embeds: [embed] });
+            // 🔘 Adiciona botões interativos
+            const buttons = createProfileButtons(isOwnProfile);
+
+            await interaction.editReply({ embeds: [embed], components: [buttons] });
         }
 
         else if (commandName === 'atualizar') {
@@ -310,6 +316,9 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 return;
             }
 
+            // Guarda count anterior para verificar milestones
+            const previousCount = user.goDevsActivitiesCount || 0;
+
             // Sincroniza atividades para o cache local
             await goDevsActivityService.syncActivities(user.id, activities);
             
@@ -327,6 +336,9 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             if (newBadges.length > 0) {
                 await announceMultipleAchievements(client, interaction.user, newBadges);
             }
+
+            // 🎊 Verifica e anuncia milestones (10, 25, 50, 100 atividades)
+            await announceMilestone(client, interaction.user, previousCount, count);
 
             // Busca perfil atualizado para mostrar streak
             const updatedProfile = await userService.getFullProfile(discordId);
@@ -403,3 +415,120 @@ function createProgressBar(percentage: number): string {
     const emptyChar = '░';
     return filledChar.repeat(filled) + emptyChar.repeat(empty);
 }
+
+// 🔘 Handler para botões interativos
+export const handleButtonInteraction = async (interaction: ButtonInteraction, client: Client) => {
+    const { customId } = interaction;
+
+    try {
+        // 🔄 Botão "Atualizar" ou "Sincronizar"
+        if (customId === 'btn_update_profile') {
+            await interaction.deferReply({ ephemeral: true });
+            
+            const discordId = interaction.user.id;
+            const username = interaction.user.username;
+            
+            const user = await userService.findOrCreate(discordId, username);
+            
+            // Verifica cooldown
+            const COOLDOWN_MINUTES = 5;
+            if (user.lastSyncedAt) {
+                const diffMs = Date.now() - new Date(user.lastSyncedAt).getTime();
+                const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                
+                if (diffMinutes < COOLDOWN_MINUTES) {
+                    const remaining = COOLDOWN_MINUTES - diffMinutes;
+                    await interaction.editReply({
+                        content: `⏳ Aguarde **${remaining} minutos** antes de sincronizar novamente.`
+                    });
+                    return;
+                }
+            }
+
+            const { activities, count, error } = await fetchGoDevsActivities(discordId);
+            
+            if (error || count === 0) {
+                await interaction.editReply({
+                    content: error ? `❌ Erro: ${error}` : '📭 Nenhuma atividade encontrada.'
+                });
+                return;
+            }
+
+            await goDevsActivityService.syncActivities(user.id, activities);
+            const activitiesWithDates = activities.map(a => ({ submittedAt: new Date(a.created_at) }));
+            await userService.updateGoDevsCount(discordId, count, activitiesWithDates);
+
+            await interaction.editReply({
+                content: `✅ **${count} atividades** sincronizadas! Use \`/perfil\` para ver suas estatísticas.`
+            });
+        }
+
+        // 📊 Botão "Ver Ranking"
+        else if (customId === 'btn_view_ranking' || customId === 'btn_ranking_full') {
+            await interaction.deferReply({ ephemeral: true });
+            
+            const ranking = await userService.getFullRanking(10);
+            
+            if (ranking.length === 0) {
+                await interaction.editReply({ content: '📊 Nenhum usuário no ranking ainda!' });
+                return;
+            }
+
+            const medals = ['🥇', '🥈', '🥉'];
+            const rankingList = ranking.map((user, index) => {
+                const medal = medals[index] || `**${index + 1}.**`;
+                return `${medal} **${user.username}** — 📊 ${user.goDevsActivitiesCount} atividades`;
+            }).join('\n');
+
+            const embed = new EmbedBuilder()
+                .setColor(0xFFD700)
+                .setTitle('🏆 Ranking GoDevs')
+                .setDescription(rankingList)
+                .setFooter({ text: `Top ${ranking.length} usuários` })
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        }
+
+        // 👤 Botão "Meu Perfil"
+        else if (customId === 'btn_my_profile') {
+            await interaction.deferReply({ ephemeral: true });
+            
+            const profile = await userService.getFullProfile(interaction.user.id);
+            
+            if (!profile) {
+                await userService.findOrCreate(interaction.user.id, interaction.user.username);
+                await interaction.editReply({
+                    content: '✅ Perfil criado! Use `/perfil` para ver suas estatísticas ou `/atualizar` para sincronizar atividades.'
+                });
+                return;
+            }
+
+            const { stats } = profile;
+            const position = await userService.getRankingPosition(interaction.user.id);
+            const total = await userService.getTotalUsers();
+
+            const embed = new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setTitle(`📊 ${profile.username}`)
+                .setThumbnail(interaction.user.displayAvatarURL({ size: 64 }))
+                .addFields(
+                    { name: '🏅 Posição', value: `#${position} de ${total}`, inline: true },
+                    { name: '🔥 Streak', value: `${stats.streak} dias`, inline: true },
+                    { name: '💻 Atividades', value: `${stats.goDevsActivities}`, inline: true }
+                )
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        }
+
+    } catch (error: any) {
+        console.error('Erro no botão:', error);
+        
+        if (interaction.deferred) {
+            await interaction.editReply({ content: `❌ Erro: ${error.message}` });
+        } else {
+            await interaction.reply({ content: `❌ Erro: ${error.message}`, ephemeral: true });
+        }
+    }
+};
