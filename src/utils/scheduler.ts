@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { Client, EmbedBuilder, ChannelType } from 'discord.js';
 import { dailyChallenges } from './challenges.js';
-import { challengeService, userService } from '../lib/prisma.js';
+import { dailyPostService } from '../lib/prisma.js';
 
 export const postarDesafio = async (client: Client, idManual: number | null = null) => {
     const guild = client.guilds.cache.first();
@@ -35,11 +35,12 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
                 challengeId = idManual;
             } else {
                 // Busca desafios não postados no banco de dados
-                const unpostedIds = await challengeService.getUnposted();
+                const unpostedIds = await dailyPostService.getUnpostedIds(dailyChallenges.length);
                 
                 if (unpostedIds.length === 0) {
-                    // Todos foram postados, reseta e escolhe aleatório
-                    console.log('🔄 Todos os desafios foram postados! Resetando...');
+                    // Todos foram postados, reseta o histórico e escolhe aleatório
+                    console.log('🔄 Todos os desafios foram postados! Resetando histórico...');
+                    await dailyPostService.clearAllPosts();
                     const randomIndex = Math.floor(Math.random() * dailyChallenges.length);
                     challengeId = dailyChallenges[randomIndex]!.id;
                 } else {
@@ -77,8 +78,8 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
                 embeds: [embed] 
             });
 
-            // 🔥 REGISTRA NO BANCO DE DADOS
-            await challengeService.recordDailyPost(
+            // 🔥 REGISTRA NO BANCO DE DADOS (sem foreign key para tabela challenges)
+            await dailyPostService.recordDailyPost(
                 challenge.id,
                 channel.id,
                 mensagemEnviada.id

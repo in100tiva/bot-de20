@@ -43,30 +43,12 @@ export const userService = {
   async getRanking(limit: number = 10) {
     return await prisma.user.findMany({
       take: limit,
-      orderBy: { points: 'desc' },
+      orderBy: { goDevsActivitiesCount: 'desc' },
       select: {
         username: true,
         points: true,
         streak: true,
-        _count: {
-          select: { submissions: true },
-        },
-      },
-    });
-  },
-
-  // Busca perfil com estatísticas
-  async getProfile(discordId: string) {
-    return await prisma.user.findUnique({
-      where: { discordId },
-      include: {
-        submissions: {
-          where: { status: 'APPROVED' },
-          select: { challengeId: true, points: true },
-        },
-        badges: {
-          include: { badge: true },
-        },
+        goDevsActivitiesCount: true,
       },
     });
   },
@@ -76,7 +58,6 @@ export const userService = {
     const user = await prisma.user.findUnique({
       where: { discordId },
       include: {
-        submissions: true,
         badges: {
           include: { badge: true },
         },
@@ -85,19 +66,13 @@ export const userService = {
     });
 
     if (!user) return null;
-
-    const approvedSubmissions = user.submissions.filter(s => s.status === 'APPROVED');
-    const pendingSubmissions = user.submissions.filter(s => s.status === 'PENDING');
     
     return {
       ...user,
       stats: {
         totalPoints: user.points,
         streak: user.streak,
-        discordChallenges: approvedSubmissions.length,
-        pendingChallenges: pendingSubmissions.length,
         goDevsActivities: user.goDevsActivitiesCount,
-        totalUnified: approvedSubmissions.length + user.goDevsActivitiesCount,
         badges: user.badges,
         lastSynced: user.lastSyncedAt,
       },
@@ -119,162 +94,25 @@ export const userService = {
   async getFullRanking(limit: number = 10) {
     return await prisma.user.findMany({
       take: limit,
-      orderBy: { points: 'desc' },
+      orderBy: { goDevsActivitiesCount: 'desc' },
       select: {
         discordId: true,
         username: true,
         points: true,
         streak: true,
         goDevsActivitiesCount: true,
-        _count: {
-          select: { 
-            submissions: {
-              where: { status: 'APPROVED' }
-            }
-          },
-        },
       },
     });
-  },
-};
-
-// Funções auxiliares para Submissões
-export const submissionService = {
-  // Cria nova submissão
-  async create(userId: string, challengeId: number, url: string) {
-    return await prisma.submission.create({
-      data: {
-        userId,
-        challengeId,
-        url,
-        status: 'PENDING',
-      },
-      include: {
-        user: true,
-        challenge: true,
-      },
-    });
-  },
-
-  // Lista submissões pendentes
-  async getPending() {
-    return await prisma.submission.findMany({
-      where: { status: 'PENDING' },
-      include: {
-        user: true,
-        challenge: true,
-      },
-      orderBy: { submittedAt: 'desc' },
-    });
-  },
-
-  // Aprova submissão
-  async approve(id: string, points: number, feedback?: string) {
-    const submission = await prisma.submission.update({
-      where: { id },
-      data: {
-        status: 'APPROVED',
-        points,
-        feedback: feedback || null,
-        reviewedAt: new Date(),
-      },
-    });
-
-    // Busca usuário para adicionar pontos
-    const user = await prisma.user.findUnique({
-      where: { id: submission.userId },
-    });
-
-    if (user) {
-      await userService.addPoints(user.discordId, points);
-    }
-
-    return submission;
-  },
-
-  // Rejeita submissão
-  async reject(id: string, feedback: string) {
-    return await prisma.submission.update({
-      where: { id },
-      data: {
-        status: 'REJECTED',
-        feedback,
-        reviewedAt: new Date(),
-      },
-    });
-  },
-
-  // Busca submissões de um desafio
-  async getByChallengeId(challengeId: number) {
-    return await prisma.submission.findMany({
-      where: { 
-        challengeId,
-        status: 'APPROVED' 
-      },
-      include: { user: true },
-      orderBy: { submittedAt: 'desc' },
-    });
-  },
-};
-
-// Funções auxiliares para Desafios
-export const challengeService = {
-  // Busca desafio por ID
-  async getById(id: number) {
-    return await prisma.challenge.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { submissions: true },
-        },
-      },
-    });
-  },
-
-  // Lista todos os desafios
-  async getAll() {
-    return await prisma.challenge.findMany({
-      where: { active: true },
-      orderBy: { id: 'asc' },
-    });
-  },
-
-  // Registra postagem diária
-  async recordDailyPost(challengeId: number, channelId: string, messageId: string) {
-    return await prisma.dailyPost.create({
-      data: {
-        challengeId,
-        channelId,
-        messageId,
-      },
-    });
-  },
-
-  // Busca desafios ainda não postados
-  async getUnposted() {
-    const allChallenges = await prisma.challenge.findMany({
-      where: { active: true },
-      select: { id: true },
-    });
-
-    const postedIds = await prisma.dailyPost.findMany({
-      select: { challengeId: true },
-      distinct: ['challengeId'],
-    });
-
-    const postedSet = new Set(postedIds.map(p => p.challengeId));
-    return allChallenges.filter(c => !postedSet.has(c.id)).map(c => c.id);
   },
 };
 
 // Funções auxiliares para Badges
 export const badgeService = {
-  // Verifica e atribui badges
+  // Verifica e atribui badges baseado em atividades do GoDevs
   async checkAndAward(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        submissions: { where: { status: 'APPROVED' } },
         badges: true,
       },
     });
@@ -282,7 +120,7 @@ export const badgeService = {
     if (!user) return [];
 
     const newBadges = [];
-    const approvedCount = user.submissions.length;
+    const activitiesCount = user.goDevsActivitiesCount;
 
     // Badge por participação
     const participationBadges = [
@@ -301,7 +139,7 @@ export const badgeService = {
 
       const userHasBadge = user.badges.some(ub => ub.badgeId === badgeExists.id);
 
-      if (!userHasBadge && approvedCount >= badge.requirement) {
+      if (!userHasBadge && activitiesCount >= badge.requirement) {
         await prisma.userBadge.create({
           data: {
             userId: user.id,
@@ -370,7 +208,7 @@ export const goDevsActivityService = {
   },
 };
 
-// Funções auxiliares para postagens diárias
+// Funções auxiliares para postagens diárias (histórico de desafios enviados)
 export const dailyPostService = {
   // Registra postagem diária
   async recordDailyPost(challengeId: number, channelId: string, messageId: string) {
@@ -408,7 +246,21 @@ export const dailyPostService = {
   async clearAllPosts() {
     return await prisma.dailyPost.deleteMany({});
   },
+
+  // Busca IDs de desafios não postados (baseado no array local)
+  async getUnpostedIds(totalChallenges: number): Promise<number[]> {
+    const postedIds = await this.getAllPostedChallengeIds();
+    const postedSet = new Set(postedIds);
+    
+    // Retorna IDs de 1 até totalChallenges que ainda não foram postados
+    const unposted: number[] = [];
+    for (let id = 1; id <= totalChallenges; id++) {
+      if (!postedSet.has(id)) {
+        unposted.push(id);
+      }
+    }
+    return unposted;
+  },
 };
 
 export default prisma;
-

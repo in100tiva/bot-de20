@@ -24,62 +24,23 @@ model User {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   
-  submissions           Submission[]
   badges                UserBadge[]
   goDevsActivities      GoDevsActivity[]
   
   @@map("users")
 }
 
-// Modelo de desafios
-model Challenge {
-  id            Int          @id @default(autoincrement())
-  title         String
-  description   String       @db.Text
-  difficulty    Difficulty
-  requirements  String[]
-  active        Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  
-  submissions   Submission[]
-  dailyPosts    DailyPost[]
-  
-  @@map("challenges")
-}
-
-// Modelo de submissões/entregas
-model Submission {
-  id          String           @id @default(cuid())
-  userId      String
-  challengeId Int
-  url         String
-  status      SubmissionStatus @default(PENDING)
-  feedback    String?          @db.Text
-  points      Int              @default(0)
-  submittedAt DateTime         @default(now())
-  reviewedAt  DateTime?
-  
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  challenge   Challenge        @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  
-  @@map("submissions")
-  @@index([userId])
-  @@index([challengeId])
-  @@index([status])
-}
-
-// Modelo de postagens diárias
+// Modelo de postagens diárias (registro de desafios enviados)
+// Não usa foreign key - challengeId referencia o array local dailyChallenges
 model DailyPost {
   id            String    @id @default(cuid())
-  challengeId   Int
+  challengeId   Int       // ID do desafio no array dailyChallenges (sem FK)
   postedAt      DateTime  @default(now())
   channelId     String
   messageId     String
   
-  challenge     Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  
   @@map("daily_posts")
+  @@index([challengeId])
   @@index([postedAt])
 }
 
@@ -131,19 +92,6 @@ model GoDevsActivity {
 }
 
 // Enums
-enum Difficulty {
-  FACIL
-  MEDIO
-  DIFICIL
-}
-
-enum SubmissionStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  IN_REVIEW
-}
-
 enum BadgeType {
   PARTICIPATION  // Por número de desafios
   STREAK         // Por dias consecutivos
