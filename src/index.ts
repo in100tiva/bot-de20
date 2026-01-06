@@ -16,7 +16,7 @@ const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
-client.once('ready', (c) => {
+client.once('clientReady', (c) => {
     console.log(`✅ Logado como ${c.user.tag}`);
     startScheduler(client);
 });
