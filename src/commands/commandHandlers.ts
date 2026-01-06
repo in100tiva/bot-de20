@@ -1,8 +1,9 @@
 import { ChatInputCommandInteraction, Client, EmbedBuilder } from 'discord.js';
 import { postarDesafio } from '../utils/scheduler.js';
 import { dailyChallenges } from '../utils/challenges.js';
-import { prisma, userService, goDevsActivityService } from '../lib/prisma.js';
+import { prisma, userService, goDevsActivityService, badgeService } from '../lib/prisma.js';
 import { fetchGoDevsActivities, checkDiscordIdInGoDevs } from '../lib/supabase.js';
+import { announceMultipleAchievements } from '../utils/announcements.js';
 
 export const handleSlashCommands = async (interaction: ChatInputCommandInteraction, client: Client) => {
     const { commandName } = interaction;
@@ -265,15 +266,28 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             await goDevsActivityService.syncActivities(user.id, activities);
             await userService.updateGoDevsCount(discordId, count);
 
+            // 🏆 Verifica e atribui novas badges
+            const newBadges = await badgeService.checkAndAward(user.id);
+            
+            // Se conquistou novas badges, anuncia no canal #conquistas
+            if (newBadges.length > 0) {
+                await announceMultipleAchievements(client, interaction.user, newBadges);
+            }
+
             // Lista as 5 atividades mais recentes
             const recentActivities = activities.slice(0, 5).map((a, i) => 
                 `${i + 1}. **${a.lesson_name || 'Sem nome'}** (${a.tipo_atividade})`
             ).join('\n');
 
+            // Monta mensagem de badges conquistadas (se houver)
+            const badgesMessage = newBadges.length > 0 
+                ? `\n\n🏆 **Novas badges conquistadas:** ${newBadges.map(b => `${b.icon} ${b.name}`).join(', ')}`
+                : '';
+
             const embed = new EmbedBuilder()
-                .setColor(0x00FF00)
-                .setTitle('✅ Sincronização Concluída!')
-                .setDescription(`**${count}** atividades do GoDevs foram sincronizadas com sucesso!`)
+                .setColor(newBadges.length > 0 ? 0xFFD700 : 0x00FF00) // Dourado se ganhou badges
+                .setTitle(newBadges.length > 0 ? '✅ Sincronização + Novas Conquistas!' : '✅ Sincronização Concluída!')
+                .setDescription(`**${count}** atividades do GoDevs foram sincronizadas com sucesso!${badgesMessage}`)
                 .addFields({
                     name: '📋 Atividades Recentes',
                     value: recentActivities || '_Nenhuma_'

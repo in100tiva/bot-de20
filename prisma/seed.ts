@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { dailyChallenges } from '../src/utils/challenges.js';
 
 const prisma = new PrismaClient();
 
@@ -9,78 +8,69 @@ async function main() {
   // Limpar dados existentes (cuidado em produção!)
   console.log('🗑️  Limpando dados antigos...');
   await prisma.userBadge.deleteMany();
-  await prisma.submission.deleteMany();
+  await prisma.goDevsActivity.deleteMany();
   await prisma.dailyPost.deleteMany();
-  await prisma.challenge.deleteMany();
   await prisma.badge.deleteMany();
   await prisma.user.deleteMany();
-
-  // Criar desafios
-  console.log('📝 Criando desafios...');
-  for (const challenge of dailyChallenges) {
-    // Mapear dificuldade para o enum correto
-    let difficulty: 'FACIL' | 'MEDIO' | 'DIFICIL' = 'MEDIO';
-    if (challenge.difficulty === 'Fácil') difficulty = 'FACIL';
-    else if (challenge.difficulty === 'Médio') difficulty = 'MEDIO';
-    else if (challenge.difficulty === 'Difícil') difficulty = 'DIFICIL';
-
-    await prisma.challenge.create({
-      data: {
-        id: challenge.id,
-        title: challenge.title,
-        description: challenge.description,
-        difficulty: difficulty,
-        requirements: challenge.requirements,
-        active: true,
-      },
-    });
-    console.log(`   ✅ Desafio #${challenge.id}: ${challenge.title}`);
-  }
 
   // Criar badges
   console.log('🏆 Criando badges...');
   const badges = [
     {
       name: 'Iniciante',
-      description: 'Complete seu primeiro desafio',
+      description: 'Entregue sua primeira atividade no GoDevs',
       icon: '🔥',
       requirement: 1,
-      type: 'PARTICIPATION',
+      type: 'PARTICIPATION' as const,
     },
     {
       name: 'Dedicado',
-      description: 'Complete 5 desafios',
+      description: 'Entregue 5 atividades no GoDevs',
       icon: '⚡',
       requirement: 5,
-      type: 'PARTICIPATION',
+      type: 'PARTICIPATION' as const,
     },
     {
       name: 'Expert',
-      description: 'Complete 10 desafios',
+      description: 'Entregue 10 atividades no GoDevs',
       icon: '🌟',
       requirement: 10,
-      type: 'PARTICIPATION',
+      type: 'PARTICIPATION' as const,
     },
     {
       name: 'Mestre',
-      description: 'Complete todos os 15 desafios',
+      description: 'Entregue 15 atividades no GoDevs',
       icon: '👑',
       requirement: 15,
-      type: 'PARTICIPATION',
+      type: 'PARTICIPATION' as const,
+    },
+    {
+      name: 'Veterano',
+      description: 'Entregue 25 atividades no GoDevs',
+      icon: '🎖️',
+      requirement: 25,
+      type: 'PARTICIPATION' as const,
+    },
+    {
+      name: 'Lenda',
+      description: 'Entregue 50 atividades no GoDevs',
+      icon: '🏆',
+      requirement: 50,
+      type: 'PARTICIPATION' as const,
     },
     {
       name: 'Streak 7',
-      description: '7 dias consecutivos completando desafios',
+      description: '7 dias consecutivos de atividade',
       icon: '🎯',
       requirement: 7,
-      type: 'STREAK',
+      type: 'STREAK' as const,
     },
     {
-      name: 'Perfeccionista',
-      description: 'Complete um desafio difícil',
+      name: 'Streak 30',
+      description: '30 dias consecutivos de atividade',
       icon: '💎',
-      requirement: 1,
-      type: 'ACHIEVEMENT',
+      requirement: 30,
+      type: 'STREAK' as const,
     },
   ];
 
@@ -90,7 +80,7 @@ async function main() {
   }
 
   console.log('✅ Seed concluído com sucesso!');
-  console.log(`📊 Total: ${dailyChallenges.length} desafios e ${badges.length} badges criados`);
+  console.log(`📊 Total: ${badges.length} badges criadas`);
 }
 
 main()
@@ -101,5 +91,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
-
