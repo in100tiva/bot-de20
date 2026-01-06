@@ -269,6 +269,29 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             // Busca ou cria o usuário
             const user = await userService.findOrCreate(discordId, username);
 
+            // 🔒 COOLDOWN: Verifica se passou 5 minutos desde última sincronização
+            const COOLDOWN_MINUTES = 5;
+            if (user.lastSyncedAt) {
+                const lastSync = new Date(user.lastSyncedAt);
+                const now = new Date();
+                const diffMs = now.getTime() - lastSync.getTime();
+                const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                
+                if (diffMinutes < COOLDOWN_MINUTES) {
+                    const remainingMinutes = COOLDOWN_MINUTES - diffMinutes;
+                    const remainingSeconds = Math.ceil((COOLDOWN_MINUTES * 60 * 1000 - diffMs) / 1000) % 60;
+                    
+                    await interaction.editReply({
+                        content: `⏳ **Aguarde antes de sincronizar novamente!**\n\n` +
+                            `Você pode usar \`/atualizar\` a cada **${COOLDOWN_MINUTES} minutos**.\n\n` +
+                            `🕐 **Última sincronização:** há ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}\n` +
+                            `⏱️ **Tempo restante:** ${remainingMinutes}m ${remainingSeconds}s\n\n` +
+                            `_Use \`/perfil\` para ver suas estatísticas atuais._`
+                    });
+                    return;
+                }
+            }
+
             // Busca atividades do Supabase GoDevs
             const { activities, count, error } = await fetchGoDevsActivities(discordId);
 
