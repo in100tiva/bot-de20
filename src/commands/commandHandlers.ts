@@ -137,7 +137,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 })
                 .addFields({
                     name: '🏆 Ranking Diário',
-                    value: `🕐 **Horário:** \`13:00\` (Brasília)\n📅 **Frequência:** Todos os dias\n⏳ **Próximo:** ${nextRanking}\n📍 **Canal:** \`#ranking\``,
+                    value: `🕐 **Horário:** \`13:00\` (Brasília)\n📅 **Frequência:** Todos os dias\n⏳ **Próximo:** ${nextRanking}\n📍 **Canal:** \`#geral\``,
                     inline: false
                 })
                 .addFields({

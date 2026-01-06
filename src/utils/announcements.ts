@@ -179,7 +179,7 @@ export async function announceMilestone(
 }
 
 /**
- * 📊 Posta o TOP 3 diário no canal #ranking
+ * 📊 Posta o TOP 3 diário no canal #geral
  */
 export async function postWeeklyTop3(
   client: Client,
@@ -191,12 +191,13 @@ export async function postWeeklyTop3(
     return false;
   }
 
+  // Busca canal geral (prioriza "geral", depois "general", depois "chat")
   const channel = guild.channels.cache.find(
-    ch => (ch.name === 'ranking' || ch.name === 'rankings') && ch.isTextBased()
+    ch => (ch.name === 'geral' || ch.name === 'general' || ch.name === 'chat') && ch.isTextBased()
   ) as TextChannel | undefined;
 
   if (!channel) {
-    console.warn('⚠️ Canal #ranking não encontrado! Crie um canal chamado "ranking".');
+    console.warn('⚠️ Canal #geral não encontrado! Crie um canal chamado "geral".');
     return false;
   }
 
