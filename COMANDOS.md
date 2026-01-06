@@ -108,32 +108,16 @@ cron.schedule('0 40 2 * * *', async () => {
 
 ## 🎮 Comandos de Gamificação
 
-### `/entregar desafio_id: url:`
-Entrega a solução de um desafio
-
-**Parâmetros:**
-- `desafio_id` (obrigatório): ID do desafio (1-15)
-- `url` (obrigatório): Link do repositório GitHub com sua solução
-
-**Exemplos:**
-- `/entregar desafio_id:5 url:https://github.com/usuario/meu-projeto`
-
-**Validações:**
-- ✅ URL deve ser do GitHub
-- ✅ Desafio deve existir
-- ✅ Cria submissão com status "Pendente"
-
----
+> **Importante:** As entregas de atividades são feitas exclusivamente pelo [Portal GoDevs](https://godevs.in100tiva.com). O bot apenas sincroniza e exibe as estatísticas.
 
 ### `/ranking`
-Mostra o top 10 usuários com mais pontos
+Mostra o top 10 usuários com mais atividades
 
 **Informações exibidas:**
 - Posição no ranking (🥇🥈🥉 para top 3)
 - Nome do usuário
-- Pontos totais
 - Streak de dias ativos
-- Total de atividades (Discord + GoDevs)
+- Total de atividades do GoDevs
 
 ---
 
@@ -144,13 +128,15 @@ Mostra estatísticas completas do usuário
 - `usuario` (opcional): Usuário para ver o perfil (padrão: você mesmo)
 
 **Informações exibidas:**
-- ⭐ Pontos totais
-- 🔥 Streak de dias
-- ⏳ Entregas pendentes
-- 🎯 Desafios Discord (aprovados)
-- 💻 Atividades GoDevs (sincronizadas)
-- 📊 Total unificado
+- 🔥 Streak de dias ativos
+- 💻 Atividades do GoDevs (sincronizadas)
+- 🔗 Status de vinculação com GoDevs
 - 🏆 Badges conquistadas
+
+**Verificação automática:**
+- O bot verifica se seu Discord ID está vinculado ao GoDevs
+- Se não estiver, mostra instruções para vincular
+- Exibe seu Discord ID para facilitar a cópia
 
 **Exemplos:**
 - `/perfil` - Ver seu próprio perfil
@@ -195,10 +181,10 @@ O histórico agora é armazenado no banco de dados PostgreSQL (via Prisma Accele
 - [x] Handler de comandos implementado
 - [x] Sistema de histórico (Prisma)
 - [x] Integração com Supabase GoDevs
-- [x] Comando `/entregar`
 - [x] Comando `/ranking`
-- [x] Comando `/perfil`
+- [x] Comando `/perfil` (com verificação de vinculação GoDevs)
 - [x] Comando `/atualizar`
+- [x] Verificação automática de discord_id no GoDevs
 - [x] Logs detalhados do cron
 - [x] Tratamento de erros melhorado
 - [x] Script de registro de comandos

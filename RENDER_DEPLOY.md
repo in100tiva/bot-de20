@@ -219,9 +219,8 @@ Your service is live 🎉
    - `/desafio` - Envia desafio manualmente
    - `/status` - Ver desafios enviados
    - `/agenda` - Info do agendamento
-   - `/entregar` - Entregar solução de desafio
    - `/ranking` - Ver top 10 usuários
-   - `/perfil` - Ver estatísticas completas
+   - `/perfil` - Ver estatísticas + verificar vinculação GoDevs
    - `/atualizar` - Sincronizar atividades do GoDevs
 3. ✅ Resolver permissões do canal #desafio
 4. ✅ Monitorar com UptimeRobot

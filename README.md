@@ -142,10 +142,11 @@ Use este link para adicionar o bot ao seu servidor:
 
 | Comando | Descrição |
 |---------|-----------|
-| `/entregar desafio_id: url:` | Entrega solução de um desafio |
-| `/ranking` | Top 10 usuários com mais pontos |
-| `/perfil [usuario?]` | Estatísticas completas |
+| `/ranking` | Top 10 usuários com mais atividades |
+| `/perfil [usuario?]` | Estatísticas + verificação de vinculação GoDevs |
 | `/atualizar` | Sincroniza atividades do GoDevs |
+
+> **Nota:** As entregas de atividades são feitas exclusivamente pelo [Portal GoDevs](https://godevs.in100tiva.com). O bot sincroniza automaticamente quando você usa `/atualizar`.
 
 ### Postagem Automática
 

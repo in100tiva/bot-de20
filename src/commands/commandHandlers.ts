@@ -1,11 +1,8 @@
 import { ChatInputCommandInteraction, Client, EmbedBuilder } from 'discord.js';
 import { postarDesafio } from '../utils/scheduler.js';
 import { dailyChallenges } from '../utils/challenges.js';
-import { challengeService, prisma, userService, submissionService, goDevsActivityService } from '../lib/prisma.js';
-import { fetchGoDevsActivities } from '../lib/supabase.js';
-
-// Regex para validar URLs do GitHub
-const GITHUB_URL_REGEX = /^https:\/\/github\.com\/[\w-]+\/[\w.-]+\/?.*$/i;
+import { prisma, userService, goDevsActivityService } from '../lib/prisma.js';
+import { fetchGoDevsActivities, checkDiscordIdInGoDevs } from '../lib/supabase.js';
 
 export const handleSlashCommands = async (interaction: ChatInputCommandInteraction, client: Client) => {
     const { commandName } = interaction;
@@ -135,57 +132,6 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
 
         // === COMANDOS DE GAMIFICAÇÃO ===
 
-        else if (commandName === 'entregar') {
-            const desafioId = interaction.options.get('desafio_id')?.value as number;
-            const url = interaction.options.get('url')?.value as string;
-            
-            // Valida URL do GitHub
-            if (!GITHUB_URL_REGEX.test(url)) {
-                await interaction.reply({
-                    content: '❌ **URL inválida!**\n\nUse um link do GitHub válido, por exemplo:\n`https://github.com/seu-usuario/seu-repositorio`',
-                    ephemeral: true
-                });
-                return;
-            }
-
-            // Verifica se o desafio existe
-            const desafioExiste = dailyChallenges.find(c => c.id === desafioId);
-            if (!desafioExiste) {
-                await interaction.reply({
-                    content: `❌ **Desafio #${desafioId} não encontrado!**\n\nIDs válidos: 1 a ${dailyChallenges.length}\n\nUse \`/status\` para ver os desafios disponíveis.`,
-                    ephemeral: true
-                });
-                return;
-            }
-
-            await interaction.deferReply({ ephemeral: true });
-
-            // Busca ou cria o usuário
-            const discordUser = interaction.user;
-            const user = await userService.findOrCreate(discordUser.id, discordUser.username);
-
-            // Cria a submissão
-            const submission = await submissionService.create(user.id, desafioId, url);
-
-            const embed = new EmbedBuilder()
-                .setColor(0x00FF00)
-                .setTitle('✅ Entrega Registrada!')
-                .setDescription(`Sua solução do desafio **${desafioExiste.title}** foi recebida com sucesso!`)
-                .addFields(
-                    { name: '🔢 ID da Entrega', value: `\`${submission.id.slice(0, 8)}\``, inline: true },
-                    { name: '🎯 Desafio', value: `#${desafioId}`, inline: true },
-                    { name: '📊 Status', value: '`Pendente`', inline: true }
-                )
-                .addFields({
-                    name: '🔗 Repositório',
-                    value: `[Clique aqui](${url})`
-                })
-                .setFooter({ text: 'Sua entrega será avaliada em breve!' })
-                .setTimestamp();
-
-            await interaction.editReply({ embeds: [embed] });
-        }
-
         else if (commandName === 'ranking') {
             await interaction.deferReply({ ephemeral: false }); // Ranking é público
 
@@ -193,7 +139,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
 
             if (ranking.length === 0) {
                 await interaction.editReply({
-                    content: '📊 **Nenhum usuário no ranking ainda!**\n\nSeja o primeiro a entregar um desafio com `/entregar`!'
+                    content: '📊 **Nenhum usuário no ranking ainda!**\n\nEntregue atividades no [Portal GoDevs](https://godevs.in100tiva.com) e use `/atualizar` para sincronizar!'
                 });
                 return;
             }
@@ -201,8 +147,8 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             const medals = ['🥇', '🥈', '🥉'];
             const rankingList = ranking.map((user, index) => {
                 const medal = medals[index] || `**${index + 1}.**`;
-                const totalActivities = (user._count?.submissions || 0) + (user.goDevsActivitiesCount || 0);
-                return `${medal} **${user.username}** — ${user.points} pts | 🔥 ${user.streak} dias | 📊 ${totalActivities} atividades`;
+                const totalActivities = user.goDevsActivitiesCount || 0;
+                return `${medal} **${user.username}** — 🔥 ${user.streak} dias | 📊 ${totalActivities} atividades`;
             }).join('\n');
 
             const embed = new EmbedBuilder()
@@ -211,7 +157,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 .setDescription(rankingList)
                 .addFields({
                     name: '📈 Como subir no ranking?',
-                    value: '• Entregue desafios com `/entregar`\n• Mantenha sua streak ativa\n• Sincronize atividades do GoDevs com `/atualizar`'
+                    value: '• Entregue atividades no [Portal GoDevs](https://godevs.in100tiva.com)\n• Vincule seu Discord ID no perfil do GoDevs\n• Use `/atualizar` para sincronizar suas atividades'
                 })
                 .setFooter({ text: `Top ${ranking.length} usuários • Atualizado agora` })
                 .setTimestamp();
@@ -221,49 +167,69 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
 
         else if (commandName === 'perfil') {
             const targetUser = interaction.options.getUser('usuario') || interaction.user;
+            const isOwnProfile = targetUser.id === interaction.user.id;
             
             await interaction.deferReply({ ephemeral: true });
 
-            const profile = await userService.getFullProfile(targetUser.id);
+            // Verifica se o Discord ID está cadastrado no GoDevs
+            const { exists: discordIdInGoDevs, error: checkError } = await checkDiscordIdInGoDevs(targetUser.id);
+
+            // Busca ou cria o perfil local
+            let profile = await userService.getFullProfile(targetUser.id);
+            
+            // Se não existe perfil local, cria um básico para o usuário
+            if (!profile && isOwnProfile) {
+                await userService.findOrCreate(targetUser.id, targetUser.username);
+                profile = await userService.getFullProfile(targetUser.id);
+            }
 
             if (!profile) {
                 await interaction.editReply({
-                    content: targetUser.id === interaction.user.id
-                        ? '❌ **Você ainda não tem um perfil!**\n\nEntregue seu primeiro desafio com `/entregar` para criar seu perfil.'
-                        : `❌ **${targetUser.username}** ainda não tem um perfil no bot.`
+                    content: `❌ **${targetUser.username}** ainda não tem um perfil no bot.\n\nEle precisa usar \`/perfil\` ou \`/atualizar\` para criar o perfil.`
                 });
                 return;
             }
 
             const { stats } = profile;
+            
+            // Monta aviso se Discord ID não está no GoDevs
+            let warningMessage = '';
+            if (!discordIdInGoDevs && !checkError) {
+                warningMessage = '\n\n⚠️ **Discord ID não vinculado ao GoDevs!**\nAcesse [godevs.in100tiva.com](https://godevs.in100tiva.com) → Perfil → Configure seu Discord ID para sincronizar suas atividades.';
+            }
+
             const badgesList = stats.badges.length > 0 
                 ? stats.badges.map(ub => `${ub.badge.icon} ${ub.badge.name}`).join('\n')
                 : '_Nenhuma badge conquistada_';
 
             const embed = new EmbedBuilder()
-                .setColor(0x5865F2)
+                .setColor(discordIdInGoDevs ? 0x5865F2 : 0xFFA500) // Laranja se não vinculado
                 .setTitle(`📊 Perfil de ${profile.username}`)
                 .setThumbnail(targetUser.displayAvatarURL({ size: 128 }))
                 .addFields(
-                    { name: '⭐ Pontos', value: `\`${stats.totalPoints}\``, inline: true },
                     { name: '🔥 Streak', value: `\`${stats.streak} dias\``, inline: true },
-                    { name: '⏳ Pendentes', value: `\`${stats.pendingChallenges}\``, inline: true }
-                )
-                .addFields(
-                    { name: '🎯 Desafios Discord', value: `\`${stats.discordChallenges}\``, inline: true },
                     { name: '💻 Atividades GoDevs', value: `\`${stats.goDevsActivities}\``, inline: true },
-                    { name: '📊 Total Unificado', value: `\`${stats.totalUnified}\``, inline: true }
+                    { name: '🔗 Vinculado ao GoDevs', value: discordIdInGoDevs ? '`✅ Sim`' : '`❌ Não`', inline: true }
                 )
                 .addFields({
                     name: '🏆 Badges',
                     value: badgesList
-                })
-                .setFooter({ 
-                    text: stats.lastSynced 
-                        ? `Última sincronização GoDevs: ${new Date(stats.lastSynced).toLocaleDateString('pt-BR')}`
-                        : 'GoDevs não sincronizado — use /atualizar'
-                })
-                .setTimestamp();
+                });
+
+            // Adiciona aviso se não vinculado
+            if (!discordIdInGoDevs && !checkError) {
+                embed.addFields({
+                    name: '⚠️ Ação Necessária',
+                    value: 'Vincule seu Discord ID no [Portal GoDevs](https://godevs.in100tiva.com) para sincronizar suas atividades!\n\n**Como fazer:**\n1. Acesse godevs.in100tiva.com\n2. Vá em Configurações do Perfil\n3. Cole seu Discord ID: `' + targetUser.id + '`'
+                });
+            }
+            
+            embed.setFooter({ 
+                text: stats.lastSynced 
+                    ? `Última sincronização: ${new Date(stats.lastSynced).toLocaleDateString('pt-BR')} • Use /atualizar`
+                    : 'Nunca sincronizado — use /atualizar'
+            })
+            .setTimestamp();
 
             await interaction.editReply({ embeds: [embed] });
         }

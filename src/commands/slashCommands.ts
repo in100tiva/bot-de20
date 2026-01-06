@@ -36,22 +36,6 @@ export const commands = [
 
     // === COMANDOS DE GAMIFICAÇÃO ===
     new SlashCommandBuilder()
-        .setName('entregar')
-        .setDescription('Entrega a solução de um desafio com link do GitHub')
-        .addIntegerOption(option =>
-            option
-                .setName('desafio_id')
-                .setDescription('ID do desafio que você está entregando')
-                .setRequired(true)
-        )
-        .addStringOption(option =>
-            option
-                .setName('url')
-                .setDescription('Link do repositório GitHub com sua solução')
-                .setRequired(true)
-        ),
-    
-    new SlashCommandBuilder()
         .setName('ranking')
         .setDescription('Mostra o top 10 usuários com mais pontos'),
     
