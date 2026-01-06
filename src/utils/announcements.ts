@@ -222,7 +222,7 @@ export async function postWeeklyTop3(
         name: '🚀 Quer aparecer aqui?',
         value: 'Entregue atividades no [Portal GoDevs](https://godevs.in100tiva.com) e use `/atualizar` para sincronizar!'
       })
-      .setFooter({ text: 'Atualizado todos os dias às 13:00' })
+      .setFooter({ text: 'Atualizado todos os dias às 14:30' })
       .setTimestamp();
 
     // Botão para ver ranking completo

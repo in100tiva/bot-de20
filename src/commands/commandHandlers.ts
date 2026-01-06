@@ -124,7 +124,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
 
         else if (commandName === 'agenda') {
             const nextDesafio = getNextCronTime(2, 40);
-            const nextRanking = getNextCronTime(13, 0);
+            const nextRanking = getNextCronTime(14, 30);
             
             const embed = new EmbedBuilder()
                 .setColor(0xFFD700)
@@ -137,7 +137,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 })
                 .addFields({
                     name: '🏆 Ranking Diário',
-                    value: `🕐 **Horário:** \`13:00\` (Brasília)\n📅 **Frequência:** Todos os dias\n⏳ **Próximo:** ${nextRanking}\n📍 **Canal:** \`#geral\``,
+                    value: `🕐 **Horário:** \`14:30\` (Brasília)\n📅 **Frequência:** Todos os dias\n⏳ **Próximo:** ${nextRanking}\n📍 **Canal:** \`#geral\``,
                     inline: false
                 })
                 .addFields({

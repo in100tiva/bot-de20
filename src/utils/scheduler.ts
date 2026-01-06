@@ -109,7 +109,7 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
 export const startScheduler = (client: Client) => {
     console.log('⏰ Agendador inicializado:');
     console.log('   📅 Desafio Diário: 02:40 (todos os dias)');
-    console.log('   📊 Ranking Diário: 13:00 (todos os dias)');
+    console.log('   📊 Ranking Diário: 14:30 (todos os dias)');
     console.log('   🌍 Timezone: America/Sao_Paulo');
     
     // 📅 Desafio diário às 02:40
@@ -120,9 +120,9 @@ export const startScheduler = (client: Client) => {
         timezone: "America/Sao_Paulo"
     });
 
-    // 📊 TOP 3 diário às 13:00
-    cron.schedule('0 0 13 * * *', async () => {
-        console.log("📊 Disparando ranking diário (13:00)...");
+    // 📊 TOP 3 diário às 14:30
+    cron.schedule('0 30 14 * * *', async () => {
+        console.log("📊 Disparando ranking diário (14:30)...");
         try {
             const ranking = await userService.getFullRanking(10);
             await postWeeklyTop3(client, ranking);
