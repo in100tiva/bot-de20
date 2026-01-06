@@ -18,14 +18,23 @@ const salvarStatusSorteio = (usados: number[]) => {
 
 export const postarDesafio = async (client: Client, idManual: number | null = null) => {
     const guild = client.guilds.cache.first();
-    if (!guild) return;
+    if (!guild) {
+        console.error('❌ Nenhum servidor encontrado!');
+        return;
+    }
 
     // Busca flexível para evitar erros de tipagem do TS
     const channel = guild.channels.cache.find(
         ch => (ch.name === 'desafio' || ch.name === 'desafios') && ch.isTextBased()
     );
 
+    if (!channel) {
+        console.error('❌ Canal #desafio não encontrado! Crie um canal chamado "desafio".');
+        return;
+    }
+
     if (channel && channel.isTextBased()) {
+        try {
         let challenge;
         const status = getStatusSorteio();
         let IDsUsados: number[] = status.usados;
@@ -65,9 +74,21 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
             embeds: [embed] 
         });
 
+        console.log(`✅ Desafio "${challenge.title}" postado com sucesso!`);
+
         // Burlar trava de tipo para Crosspost em canais de anúncio
         if (channel.type === (ChannelType.GuildAnnouncement as any)) {
             await mensagemEnviada.crosspost().catch(() => null);
+        }
+        } catch (error: any) {
+            if (error.code === 50013) {
+                console.error('❌ ERRO DE PERMISSÃO: O bot não tem permissão para enviar mensagens no canal #desafio!');
+                console.error('➡️ Solução 1: Dê permissão "Enviar Mensagens" ao bot no canal');
+                console.error('➡️ Solução 2: Se for News Channel, converta para canal de texto normal');
+                console.error(`➡️ ID do Canal: ${channel.id}`);
+            } else {
+                console.error('❌ Erro ao postar desafio:', error.message);
+            }
         }
     }
 };
