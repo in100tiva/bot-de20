@@ -18,12 +18,18 @@ async function main() {
   // Criar desafios
   console.log('📝 Criando desafios...');
   for (const challenge of dailyChallenges) {
+    // Mapear dificuldade para o enum correto
+    let difficulty: 'FACIL' | 'MEDIO' | 'DIFICIL' = 'MEDIO';
+    if (challenge.difficulty === 'Fácil') difficulty = 'FACIL';
+    else if (challenge.difficulty === 'Médio') difficulty = 'MEDIO';
+    else if (challenge.difficulty === 'Difícil') difficulty = 'DIFICIL';
+
     await prisma.challenge.create({
       data: {
         id: challenge.id,
         title: challenge.title,
         description: challenge.description,
-        difficulty: challenge.difficulty.toUpperCase() as 'FACIL' | 'MEDIO' | 'DIFICIL',
+        difficulty: difficulty,
         requirements: challenge.requirements,
         active: true,
       },
@@ -95,4 +101,5 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
 
