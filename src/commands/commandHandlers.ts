@@ -123,26 +123,28 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
         }
 
         else if (commandName === 'agenda') {
-            const nextRun = getNextCronTime();
+            const nextDesafio = getNextCronTime(2, 40);
+            const nextRanking = getNextCronTime(13, 0);
             
             const embed = new EmbedBuilder()
                 .setColor(0xFFD700)
-                .setTitle('⏰ Agendamento Automático')
-                .setDescription('Informações sobre o sistema de postagens automáticas')
-                .addFields(
-                    { name: '🕐 Horário', value: '`02:40` (Horário de Brasília)', inline: true },
-                    { name: '🌍 Timezone', value: '`America/Sao_Paulo`', inline: true },
-                    { name: '📅 Frequência', value: '`Todos os dias`', inline: true }
-                )
+                .setTitle('⏰ Agendamentos Automáticos')
+                .setDescription('Informações sobre as postagens automáticas do bot')
                 .addFields({
-                    name: '⏳ Próxima Execução',
-                    value: nextRun
+                    name: '📢 Desafio Diário',
+                    value: `🕐 **Horário:** \`02:40\` (Brasília)\n📅 **Frequência:** Todos os dias\n⏳ **Próximo:** ${nextDesafio}\n📍 **Canal:** \`#desafio\``,
+                    inline: false
+                })
+                .addFields({
+                    name: '🏆 Ranking Diário',
+                    value: `🕐 **Horário:** \`13:00\` (Brasília)\n📅 **Frequência:** Todos os dias\n⏳ **Próximo:** ${nextRanking}\n📍 **Canal:** \`#ranking\``,
+                    inline: false
                 })
                 .addFields({
                     name: 'ℹ️ Como funciona',
-                    value: 'O bot seleciona automaticamente um desafio que ainda não foi enviado (consultando o banco de dados Prisma) e posta no canal #desafio'
+                    value: '• **Desafio:** Seleciona automaticamente um desafio não enviado e posta no canal\n• **Ranking:** Mostra o TOP 3 usuários com mais atividades'
                 })
-                .setFooter({ text: 'Use /desafio para postar manualmente a qualquer momento' })
+                .setFooter({ text: 'Timezone: America/Sao_Paulo' })
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed], ephemeral: true });
@@ -388,15 +390,15 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
     }
 };
 
-function getNextCronTime(): string {
+function getNextCronTime(hour: number = 2, minute: number = 40): string {
     const now = new Date();
     const nextRun = new Date(now);
     
-    // Define para 02:40 de hoje
-    nextRun.setHours(2, 40, 0, 0);
+    // Define para o horário especificado de hoje
+    nextRun.setHours(hour, minute, 0, 0);
     
-    // Se já passou das 02:40, agenda para amanhã
-    if (now.getHours() > 2 || (now.getHours() === 2 && now.getMinutes() >= 40)) {
+    // Se já passou do horário, agenda para amanhã
+    if (now.getHours() > hour || (now.getHours() === hour && now.getMinutes() >= minute)) {
         nextRun.setDate(nextRun.getDate() + 1);
     }
     
@@ -404,7 +406,7 @@ function getNextCronTime(): string {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
-    return `<t:${Math.floor(nextRun.getTime() / 1000)}:R> (em ~${hours}h ${minutes}m)`;
+    return `<t:${Math.floor(nextRun.getTime() / 1000)}:R> (~${hours}h ${minutes}m)`;
 }
 
 // 🔥 Cria barra de progresso visual
