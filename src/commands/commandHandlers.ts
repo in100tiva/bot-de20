@@ -210,41 +210,49 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
 
             const { stats } = profile;
             
-            // Monta aviso se Discord ID não está no GoDevs
-            let warningMessage = '';
-            if (!discordIdInGoDevs && !checkError) {
-                warningMessage = '\n\n⚠️ **Discord ID não vinculado ao GoDevs!**\nAcesse [godevs.in100tiva.com](https://godevs.in100tiva.com) → Perfil → Configure seu Discord ID para sincronizar suas atividades.';
-            }
+            // 🔥 Busca posição no ranking
+            const rankingPosition = await userService.getRankingPosition(targetUser.id);
+            const totalUsers = await userService.getTotalUsers();
 
             const badgesList = stats.badges.length > 0 
-                ? stats.badges.map(ub => `${ub.badge.icon} ${ub.badge.name}`).join('\n')
+                ? stats.badges.map(ub => `${ub.badge.icon} ${ub.badge.name}`).join(', ')
                 : '_Nenhuma badge conquistada_';
+
+            // 🔥 Monta barra de progresso para próxima badge
+            let nextBadgeText = '🏆 **Todas as badges conquistadas!**';
+            if (stats.nextBadge) {
+                const { icon, name, remaining, progress } = stats.nextBadge;
+                const progressBar = createProgressBar(progress);
+                nextBadgeText = `${icon} **${name}** — faltam ${remaining} atividades\n${progressBar} ${progress}%`;
+            }
 
             const embed = new EmbedBuilder()
                 .setColor(discordIdInGoDevs ? 0x5865F2 : 0xFFA500) // Laranja se não vinculado
                 .setTitle(`📊 Perfil de ${profile.username}`)
                 .setThumbnail(targetUser.displayAvatarURL({ size: 128 }))
                 .addFields(
+                    { name: '🏅 Posição', value: `\`#${rankingPosition}\` de ${totalUsers}`, inline: true },
                     { name: '🔥 Streak', value: `\`${stats.streak} dias\``, inline: true },
-                    { name: '💻 Atividades GoDevs', value: `\`${stats.goDevsActivities}\``, inline: true },
-                    { name: '🔗 Vinculado ao GoDevs', value: discordIdInGoDevs ? '`✅ Sim`' : '`❌ Não`', inline: true }
+                    { name: '💻 Atividades', value: `\`${stats.goDevsActivities}\``, inline: true }
                 )
-                .addFields({
-                    name: '🏆 Badges',
-                    value: badgesList
-                });
+                .addFields(
+                    { name: '🎖️ Badges Conquistadas', value: badgesList, inline: false }
+                )
+                .addFields(
+                    { name: '⏳ Próxima Conquista', value: nextBadgeText, inline: false }
+                );
 
             // Adiciona aviso se não vinculado
             if (!discordIdInGoDevs && !checkError) {
                 embed.addFields({
-                    name: '⚠️ Ação Necessária',
-                    value: 'Vincule seu Discord ID no [Portal GoDevs](https://godevs.in100tiva.com) para sincronizar suas atividades!\n\n**Como fazer:**\n1. Acesse godevs.in100tiva.com\n2. Vá em Configurações do Perfil\n3. Cole seu Discord ID: `' + targetUser.id + '`'
+                    name: '⚠️ Vincule seu Discord',
+                    value: `[Portal GoDevs](https://godevs.in100tiva.com) → Perfil → Discord ID: \`${targetUser.id}\``
                 });
             }
             
             embed.setFooter({ 
                 text: stats.lastSynced 
-                    ? `Última sincronização: ${new Date(stats.lastSynced).toLocaleDateString('pt-BR')} • Use /atualizar`
+                    ? `Sincronizado: ${new Date(stats.lastSynced).toLocaleDateString('pt-BR')} • /atualizar`
                     : 'Nunca sincronizado — use /atualizar'
             })
             .setTimestamp();
@@ -281,7 +289,12 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
 
             // Sincroniza atividades para o cache local
             await goDevsActivityService.syncActivities(user.id, activities);
-            await userService.updateGoDevsCount(discordId, count);
+            
+            // 🔥 Passa atividades para calcular streak real
+            const activitiesWithDates = activities.map(a => ({ 
+                submittedAt: new Date(a.created_at) 
+            }));
+            await userService.updateGoDevsCount(discordId, count, activitiesWithDates);
 
             // 🏆 Garante que badges existem e verifica conquistas
             await badgeService.ensureBadgesExist();
@@ -291,6 +304,10 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             if (newBadges.length > 0) {
                 await announceMultipleAchievements(client, interaction.user, newBadges);
             }
+
+            // Busca perfil atualizado para mostrar streak
+            const updatedProfile = await userService.getFullProfile(discordId);
+            const streak = updatedProfile?.stats.streak || 0;
 
             // Lista as 5 atividades mais recentes
             const recentActivities = activities.slice(0, 5).map((a, i) => 
@@ -306,15 +323,15 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 .setColor(newBadges.length > 0 ? 0xFFD700 : 0x00FF00) // Dourado se ganhou badges
                 .setTitle(newBadges.length > 0 ? '✅ Sincronização + Novas Conquistas!' : '✅ Sincronização Concluída!')
                 .setDescription(`**${count}** atividades do GoDevs foram sincronizadas com sucesso!${badgesMessage}`)
+                .addFields(
+                    { name: '🔥 Streak Atual', value: `\`${streak} dias\``, inline: true },
+                    { name: '💻 Total Atividades', value: `\`${count}\``, inline: true }
+                )
                 .addFields({
                     name: '📋 Atividades Recentes',
                     value: recentActivities || '_Nenhuma_'
                 })
-                .addFields({
-                    name: '💡 Dica',
-                    value: 'Use `/perfil` para ver suas estatísticas completas!'
-                })
-                .setFooter({ text: `Discord ID: ${discordId}` })
+                .setFooter({ text: 'Use /perfil para ver estatísticas completas' })
                 .setTimestamp();
 
             await interaction.editReply({ embeds: [embed] });
@@ -353,4 +370,13 @@ function getNextCronTime(): string {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
     return `<t:${Math.floor(nextRun.getTime() / 1000)}:R> (em ~${hours}h ${minutes}m)`;
+}
+
+// 🔥 Cria barra de progresso visual
+function createProgressBar(percentage: number): string {
+    const filled = Math.round(percentage / 10);
+    const empty = 10 - filled;
+    const filledChar = '█';
+    const emptyChar = '░';
+    return filledChar.repeat(filled) + emptyChar.repeat(empty);
 }

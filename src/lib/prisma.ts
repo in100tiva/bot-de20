@@ -23,36 +23,6 @@ export const userService = {
     });
   },
 
-  // Adiciona pontos ao usuário
-  async addPoints(discordId: string, points: number) {
-    return await prisma.user.update({
-      where: { discordId },
-      data: { points: { increment: points } },
-    });
-  },
-
-  // Atualiza streak
-  async updateStreak(discordId: string, increment: boolean = true) {
-    return await prisma.user.update({
-      where: { discordId },
-      data: { streak: increment ? { increment: 1 } : 0 },
-    });
-  },
-
-  // Busca ranking
-  async getRanking(limit: number = 10) {
-    return await prisma.user.findMany({
-      take: limit,
-      orderBy: { goDevsActivitiesCount: 'desc' },
-      select: {
-        username: true,
-        points: true,
-        streak: true,
-        goDevsActivitiesCount: true,
-      },
-    });
-  },
-
   // Busca perfil completo com estatísticas unificadas (Discord + GoDevs)
   async getFullProfile(discordId: string) {
     const user = await prisma.user.findUnique({
@@ -61,30 +31,42 @@ export const userService = {
         badges: {
           include: { badge: true },
         },
-        goDevsActivities: true,
+        goDevsActivities: {
+          orderBy: { submittedAt: 'desc' },
+        },
       },
     });
 
     if (!user) return null;
+
+    // 🔥 CALCULA STREAK REAL baseado nas datas das atividades
+    const streak = calculateStreak(user.goDevsActivities.map(a => a.submittedAt));
+
+    // 🔥 BUSCA PRÓXIMA BADGE
+    const nextBadge = getNextBadge(user.goDevsActivitiesCount, user.badges.map(ub => ub.badge.name));
     
     return {
       ...user,
       stats: {
-        totalPoints: user.points,
-        streak: user.streak,
+        streak,
         goDevsActivities: user.goDevsActivitiesCount,
         badges: user.badges,
         lastSynced: user.lastSyncedAt,
+        nextBadge,
       },
     };
   },
 
-  // Atualiza contagem de atividades GoDevs
-  async updateGoDevsCount(discordId: string, count: number) {
+  // Atualiza contagem de atividades GoDevs e recalcula streak
+  async updateGoDevsCount(discordId: string, count: number, activities?: Array<{ submittedAt: Date }>) {
+    // Calcula streak se tiver atividades
+    const streak = activities ? calculateStreak(activities.map(a => a.submittedAt)) : 0;
+    
     return await prisma.user.update({
       where: { discordId },
       data: {
         goDevsActivitiesCount: count,
+        streak,
         lastSyncedAt: new Date(),
       },
     });
@@ -94,17 +76,128 @@ export const userService = {
   async getFullRanking(limit: number = 10) {
     return await prisma.user.findMany({
       take: limit,
-      orderBy: { goDevsActivitiesCount: 'desc' },
+      orderBy: [
+        { goDevsActivitiesCount: 'desc' },
+        { streak: 'desc' },
+      ],
       select: {
         discordId: true,
         username: true,
-        points: true,
         streak: true,
         goDevsActivitiesCount: true,
       },
     });
   },
+
+  // Busca posição do usuário no ranking
+  async getRankingPosition(discordId: string): Promise<number> {
+    const allUsers = await prisma.user.findMany({
+      orderBy: [
+        { goDevsActivitiesCount: 'desc' },
+        { streak: 'desc' },
+      ],
+      select: { discordId: true },
+    });
+    
+    const position = allUsers.findIndex(u => u.discordId === discordId);
+    return position === -1 ? 0 : position + 1;
+  },
+
+  // Conta total de usuários
+  async getTotalUsers(): Promise<number> {
+    return await prisma.user.count();
+  },
 };
+
+// 🔥 CALCULA STREAK BASEADO NAS DATAS DAS ATIVIDADES
+function calculateStreak(dates: Date[]): number {
+  if (dates.length === 0) return 0;
+
+  // Ordena do mais recente para o mais antigo
+  const sortedDates = [...dates].sort((a, b) => b.getTime() - a.getTime());
+  
+  // Normaliza para apenas a data (sem hora)
+  const uniqueDays = new Set<string>();
+  sortedDates.forEach(d => {
+    const dateStr = new Date(d).toISOString().split('T')[0];
+    uniqueDays.add(dateStr!);
+  });
+  
+  const daysList = Array.from(uniqueDays).sort().reverse(); // Mais recente primeiro
+  
+  if (daysList.length === 0) return 0;
+
+  // Verifica se a atividade mais recente foi hoje ou ontem
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const mostRecentDate = new Date(daysList[0]!);
+  mostRecentDate.setHours(0, 0, 0, 0);
+  
+  // Se a última atividade foi há mais de 1 dia, streak é 0
+  const daysDiff = Math.floor((today.getTime() - mostRecentDate.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysDiff > 1) return 0;
+  
+  // Conta dias consecutivos
+  let streak = 1;
+  for (let i = 1; i < daysList.length; i++) {
+    const currentDate = new Date(daysList[i - 1]!);
+    const prevDate = new Date(daysList[i]!);
+    
+    currentDate.setHours(0, 0, 0, 0);
+    prevDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+}
+
+// 🔥 BUSCA PRÓXIMA BADGE A CONQUISTAR
+interface NextBadgeInfo {
+  name: string;
+  icon: string;
+  requirement: number;
+  remaining: number;
+  progress: number; // 0 a 100
+}
+
+function getNextBadge(activitiesCount: number, earnedBadgeNames: string[]): NextBadgeInfo | null {
+  const participationBadges = [
+    { name: 'Iniciante', icon: '🔥', requirement: 1 },
+    { name: 'Dedicado', icon: '⚡', requirement: 5 },
+    { name: 'Expert', icon: '🌟', requirement: 10 },
+    { name: 'Mestre', icon: '👑', requirement: 15 },
+    { name: 'Veterano', icon: '🎖️', requirement: 25 },
+    { name: 'Lenda', icon: '🏆', requirement: 50 },
+  ];
+
+  // Encontra a primeira badge que o usuário ainda não tem
+  for (const badge of participationBadges) {
+    if (!earnedBadgeNames.includes(badge.name)) {
+      const remaining = badge.requirement - activitiesCount;
+      const progress = Math.min(100, Math.round((activitiesCount / badge.requirement) * 100));
+      
+      return {
+        ...badge,
+        remaining: Math.max(0, remaining),
+        progress,
+      };
+    }
+  }
+
+  // Se já tem todas as badges
+  return null;
+}
 
 // Funções auxiliares para Badges
 export const badgeService = {
