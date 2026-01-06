@@ -109,7 +109,8 @@ export const userService = {
 // Funções auxiliares para Badges
 export const badgeService = {
   // Verifica e atribui badges baseado em atividades do GoDevs
-  async checkAndAward(userId: string) {
+  // Recebe o count diretamente para garantir valor atualizado
+  async checkAndAward(userId: string, activitiesCount?: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -117,40 +118,91 @@ export const badgeService = {
       },
     });
 
-    if (!user) return [];
+    if (!user) {
+      console.log(`❌ [Badge] Usuário ${userId} não encontrado`);
+      return [];
+    }
 
-    const newBadges = [];
-    const activitiesCount = user.goDevsActivitiesCount;
+    // Usa o count passado ou o do banco
+    const count = activitiesCount ?? user.goDevsActivitiesCount;
+    console.log(`🏆 [Badge] Verificando badges para ${user.username} (${count} atividades)`);
 
-    // Badge por participação
+    const newBadges: any[] = [];
+
+    // Badges por participação (quantidade de atividades)
     const participationBadges = [
       { name: 'Iniciante', requirement: 1 },
       { name: 'Dedicado', requirement: 5 },
       { name: 'Expert', requirement: 10 },
       { name: 'Mestre', requirement: 15 },
+      { name: 'Veterano', requirement: 25 },
+      { name: 'Lenda', requirement: 50 },
     ];
 
-    for (const badge of participationBadges) {
-      const badgeExists = await prisma.badge.findUnique({
-        where: { name: badge.name },
-      });
+    // Busca todas as badges do banco de uma vez
+    const allBadges = await prisma.badge.findMany();
+    console.log(`🏆 [Badge] ${allBadges.length} badges encontradas no banco`);
 
-      if (!badgeExists) continue;
+    for (const badgeConfig of participationBadges) {
+      const badgeInDb = allBadges.find(b => b.name === badgeConfig.name);
 
-      const userHasBadge = user.badges.some(ub => ub.badgeId === badgeExists.id);
+      if (!badgeInDb) {
+        console.log(`⚠️ [Badge] Badge "${badgeConfig.name}" não encontrada no banco`);
+        continue;
+      }
 
-      if (!userHasBadge && activitiesCount >= badge.requirement) {
-        await prisma.userBadge.create({
-          data: {
-            userId: user.id,
-            badgeId: badgeExists.id,
-          },
-        });
-        newBadges.push(badgeExists);
+      const userHasBadge = user.badges.some(ub => ub.badgeId === badgeInDb.id);
+
+      if (!userHasBadge && count >= badgeConfig.requirement) {
+        try {
+          await prisma.userBadge.create({
+            data: {
+              userId: user.id,
+              badgeId: badgeInDb.id,
+            },
+          });
+          newBadges.push(badgeInDb);
+          console.log(`✅ [Badge] Badge "${badgeInDb.name}" atribuída a ${user.username}!`);
+        } catch (error: any) {
+          // Ignora erro de duplicação (já tem a badge)
+          if (!error.message?.includes('Unique constraint')) {
+            console.error(`❌ [Badge] Erro ao atribuir badge:`, error.message);
+          }
+        }
       }
     }
 
+    console.log(`🏆 [Badge] ${newBadges.length} novas badges conquistadas`);
     return newBadges;
+  },
+
+  // Cria as badges padrão se não existirem
+  async ensureBadgesExist() {
+    const badges = [
+      { name: 'Iniciante', description: 'Entregue sua primeira atividade no GoDevs', icon: '🔥', requirement: 1, type: 'PARTICIPATION' as const },
+      { name: 'Dedicado', description: 'Entregue 5 atividades no GoDevs', icon: '⚡', requirement: 5, type: 'PARTICIPATION' as const },
+      { name: 'Expert', description: 'Entregue 10 atividades no GoDevs', icon: '🌟', requirement: 10, type: 'PARTICIPATION' as const },
+      { name: 'Mestre', description: 'Entregue 15 atividades no GoDevs', icon: '👑', requirement: 15, type: 'PARTICIPATION' as const },
+      { name: 'Veterano', description: 'Entregue 25 atividades no GoDevs', icon: '🎖️', requirement: 25, type: 'PARTICIPATION' as const },
+      { name: 'Lenda', description: 'Entregue 50 atividades no GoDevs', icon: '🏆', requirement: 50, type: 'PARTICIPATION' as const },
+      { name: 'Streak 7', description: '7 dias consecutivos de atividade', icon: '🎯', requirement: 7, type: 'STREAK' as const },
+      { name: 'Streak 30', description: '30 dias consecutivos de atividade', icon: '💎', requirement: 30, type: 'STREAK' as const },
+    ];
+
+    let created = 0;
+    for (const badge of badges) {
+      const exists = await prisma.badge.findUnique({ where: { name: badge.name } });
+      if (!exists) {
+        await prisma.badge.create({ data: badge });
+        created++;
+        console.log(`🏆 [Badge] Criada: ${badge.icon} ${badge.name}`);
+      }
+    }
+    
+    if (created > 0) {
+      console.log(`🏆 [Badge] ${created} badges criadas automaticamente`);
+    }
+    return created;
   },
 };
 

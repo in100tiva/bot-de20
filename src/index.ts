@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import http from 'http';
 import { startScheduler, postarDesafio } from './utils/scheduler.js';
 import { handleSlashCommands } from './commands/commandHandlers.js';
+import { badgeService } from './lib/prisma.js';
 
 dotenv.config();
 
@@ -25,9 +26,18 @@ const client = new Client({
     ]
 });
 
-client.once('clientReady', (c) => {
+client.once('clientReady', async (c) => {
     console.log(`✅ Logado como ${c.user.tag}`);
     console.log(`🎯 Servidores: ${c.guilds.cache.size}`);
+    
+    // Garante que as badges existem no banco de dados
+    try {
+        await badgeService.ensureBadgesExist();
+        console.log('🏆 Sistema de badges inicializado');
+    } catch (error) {
+        console.error('⚠️ Erro ao inicializar badges:', error);
+    }
+    
     startScheduler(client);
 });
 

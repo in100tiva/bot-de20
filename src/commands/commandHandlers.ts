@@ -266,8 +266,9 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             await goDevsActivityService.syncActivities(user.id, activities);
             await userService.updateGoDevsCount(discordId, count);
 
-            // 🏆 Verifica e atribui novas badges
-            const newBadges = await badgeService.checkAndAward(user.id);
+            // 🏆 Garante que badges existem e verifica conquistas
+            await badgeService.ensureBadgesExist();
+            const newBadges = await badgeService.checkAndAward(user.id, count);
             
             // Se conquistou novas badges, anuncia no canal #conquistas
             if (newBadges.length > 0) {
