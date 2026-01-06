@@ -179,7 +179,7 @@ export async function announceMilestone(
 }
 
 /**
- * 📊 Posta o TOP 3 semanal no canal #ranking
+ * 📊 Posta o TOP 3 diário no canal #ranking
  */
 export async function postWeeklyTop3(
   client: Client,
@@ -215,13 +215,13 @@ export async function postWeeklyTop3(
 
     const embed = new EmbedBuilder()
       .setColor(0xFFD700)
-      .setTitle('📊 TOP 3 DA SEMANA')
+      .setTitle('📊 TOP 3 DO DIA')
       .setDescription(rankingList)
       .addFields({
         name: '🚀 Quer aparecer aqui?',
         value: 'Entregue atividades no [Portal GoDevs](https://godevs.in100tiva.com) e use `/atualizar` para sincronizar!'
       })
-      .setFooter({ text: 'Atualizado toda segunda-feira às 10:00' })
+      .setFooter({ text: 'Atualizado todos os dias às 13:00' })
       .setTimestamp();
 
     // Botão para ver ranking completo
@@ -235,12 +235,12 @@ export async function postWeeklyTop3(
       );
 
     await channel.send({
-      content: '# 🏆 RANKING SEMANAL GODEVS',
+      content: '# 🏆 RANKING DIÁRIO GODEVS',
       embeds: [embed],
       components: [row]
     });
 
-    console.log('📊 TOP 3 semanal postado com sucesso!');
+    console.log('📊 TOP 3 diário postado com sucesso!');
     return true;
   } catch (error: any) {
     console.error('❌ Erro ao postar ranking semanal:', error.message);
