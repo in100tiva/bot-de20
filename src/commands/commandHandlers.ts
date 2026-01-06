@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, Client, EmbedBuilder } from 'discord.js';
-import { postarDesafio, getStatusSorteio, salvarStatusSorteio, limparHistorico } from '../utils/scheduler.js';
+import { postarDesafio } from '../utils/scheduler.js';
 import { dailyChallenges } from '../utils/challenges.js';
+import { challengeService, prisma } from '../lib/prisma.js';
 
 export const handleSlashCommands = async (interaction: ChatInputCommandInteraction, client: Client) => {
     const { commandName } = interaction;
@@ -20,8 +21,14 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
         }
 
         else if (commandName === 'status') {
-            const status = getStatusSorteio();
-            const usados = status.usados || [];
+            // 🔥 AGORA USA O BANCO DE DADOS PRISMA
+            const postedChallenges = await prisma.dailyPost.findMany({
+                select: { challengeId: true },
+                distinct: ['challengeId'],
+                orderBy: { challengeId: 'asc' }
+            });
+            
+            const usados = postedChallenges.map(p => p.challengeId);
             const total = dailyChallenges.length;
             const restantes = total - usados.length;
 
@@ -40,7 +47,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                         ? usados.sort((a: number, b: number) => a - b).map((id: number) => `\`${id}\``).join(', ')
                         : '_Nenhum desafio enviado ainda_'
                 })
-                .setFooter({ text: 'Use /desafio para enviar manualmente' })
+                .setFooter({ text: 'Use /desafio para enviar manualmente • Dados do banco Prisma' })
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed], ephemeral: true });
@@ -57,30 +64,41 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 return;
             }
 
-            const status = getStatusSorteio();
-            const usados = status.usados || [];
+            // 🔥 VERIFICA NO BANCO DE DADOS
+            const alreadyPosted = await prisma.dailyPost.findFirst({
+                where: { challengeId: id }
+            });
 
-            if (usados.includes(id)) {
+            if (alreadyPosted) {
                 await interaction.reply({
-                    content: `⚠️ O desafio #${id} já está marcado como enviado!`,
+                    content: `⚠️ O desafio #${id} já foi postado em ${new Date(alreadyPosted.postedAt).toLocaleDateString()}!`,
                     ephemeral: true
                 });
                 return;
             }
 
-            usados.push(id);
-            salvarStatusSorteio(usados);
+            // 🔥 REGISTRA NO BANCO (simulando postagem manual)
+            await prisma.dailyPost.create({
+                data: {
+                    challengeId: id,
+                    channelId: 'manual',
+                    messageId: 'manual',
+                    postedAt: new Date()
+                }
+            });
 
             await interaction.reply({
-                content: `✅ Desafio #${id} adicionado ao histórico de enviados!`,
+                content: `✅ Desafio #${id} marcado como enviado no banco de dados!`,
                 ephemeral: true
             });
         }
 
         else if (commandName === 'limpar') {
-            limparHistorico();
+            // 🔥 LIMPA O BANCO DE DADOS
+            const deleted = await prisma.dailyPost.deleteMany({});
+            
             await interaction.reply({
-                content: '✅ Histórico de desafios limpo! Todos os desafios estão disponíveis novamente.',
+                content: `✅ Histórico de desafios limpo! ${deleted.count} registros removidos do banco de dados. Todos os desafios estão disponíveis novamente.`,
                 ephemeral: true
             });
         }
@@ -103,7 +121,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 })
                 .addFields({
                     name: 'ℹ️ Como funciona',
-                    value: 'O bot seleciona automaticamente um desafio que ainda não foi enviado e posta no canal #desafio'
+                    value: 'O bot seleciona automaticamente um desafio que ainda não foi enviado (consultando o banco de dados Prisma) e posta no canal #desafio'
                 })
                 .setFooter({ text: 'Use /desafio para postar manualmente a qualquer momento' })
                 .setTimestamp();
@@ -145,4 +163,3 @@ function getNextCronTime(): string {
     
     return `<t:${Math.floor(nextRun.getTime() / 1000)}:R> (em ~${hours}h ${minutes}m)`;
 }
-

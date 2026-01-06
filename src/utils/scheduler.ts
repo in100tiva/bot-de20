@@ -1,24 +1,7 @@
 import cron from 'node-cron';
 import { Client, EmbedBuilder, ChannelType } from 'discord.js';
 import { dailyChallenges } from './challenges.js';
-import fs from 'fs';
-import path from 'path';
-
-const STORAGE_PATH = path.resolve('sorteio.json');
-
-export const getStatusSorteio = () => {
-    if (!fs.existsSync(STORAGE_PATH)) return { usados: [] };
-    try { return JSON.parse(fs.readFileSync(STORAGE_PATH, 'utf-8')); } 
-    catch (e) { return { usados: [] }; }
-};
-
-export const salvarStatusSorteio = (usados: number[]) => {
-    fs.writeFileSync(STORAGE_PATH, JSON.stringify({ usados }, null, 2));
-};
-
-export const limparHistorico = () => {
-    fs.writeFileSync(STORAGE_PATH, JSON.stringify({ usados: [] }, null, 2));
-};
+import { challengeService, userService } from '../lib/prisma.js';
 
 export const postarDesafio = async (client: Client, idManual: number | null = null) => {
     const guild = client.guilds.cache.first();
@@ -39,51 +22,75 @@ export const postarDesafio = async (client: Client, idManual: number | null = nu
 
     if (channel && channel.isTextBased()) {
         try {
-        let challenge;
-        const status = getStatusSorteio();
-        let IDsUsados: number[] = status.usados;
+            let challenge;
+            let challengeId: number;
 
-        if (idManual) {
-            challenge = dailyChallenges.find(c => c.id === idManual);
-        } else {
-            const disponiveis = dailyChallenges.filter(c => !IDsUsados.includes(c.id));
-            if (disponiveis.length === 0) {
-                IDsUsados = [];
-                challenge = dailyChallenges[Math.floor(Math.random() * dailyChallenges.length)];
+            if (idManual) {
+                // Busca desafio específico
+                challenge = dailyChallenges.find(c => c.id === idManual);
+                if (!challenge) {
+                    console.error(`❌ Desafio #${idManual} não encontrado!`);
+                    return;
+                }
+                challengeId = idManual;
             } else {
-                challenge = disponiveis[Math.floor(Math.random() * disponiveis.length)];
+                // Busca desafios não postados no banco de dados
+                const unpostedIds = await challengeService.getUnposted();
+                
+                if (unpostedIds.length === 0) {
+                    // Todos foram postados, reseta e escolhe aleatório
+                    console.log('🔄 Todos os desafios foram postados! Resetando...');
+                    const randomIndex = Math.floor(Math.random() * dailyChallenges.length);
+                    challengeId = dailyChallenges[randomIndex]!.id;
+                } else {
+                    // Escolhe aleatório dos não postados
+                    const randomIndex = Math.floor(Math.random() * unpostedIds.length);
+                    const selectedId = unpostedIds[randomIndex];
+                    if (selectedId === undefined) {
+                        console.error('❌ Erro ao selecionar desafio!');
+                        return;
+                    }
+                    challengeId = selectedId;
+                }
+                
+                challenge = dailyChallenges.find(c => c.id === challengeId);
+                if (!challenge) {
+                    console.error(`❌ Desafio #${challengeId} não encontrado!`);
+                    return;
+                }
             }
-            if (challenge) {
-                IDsUsados.push(challenge.id);
-                salvarStatusSorteio(IDsUsados);
+
+            const embed = new EmbedBuilder()
+                .setColor(0x2B2D31)
+                .setTitle(`🚀 Missão do Dia: ${challenge.title}`)
+                .setDescription(challenge.description)
+                .addFields({ name: '🛠️ Requisitos Técnicos:', value: challenge.requirements.map(req => `• ${req}`).join('\n') })
+                .addFields(
+                    { name: '📊 Dificuldade:', value: `\`${challenge.difficulty}\``, inline: true },
+                    { name: '🔗 Entrega:', value: '[Portal GoDevs](https://godevs.in100tiva.com)', inline: true }
+                )
+                .setFooter({ text: `Desafio ${challenge.id} de ${dailyChallenges.length} • GoDevs` })
+                .setTimestamp();
+
+            const mensagemEnviada = await channel.send({ 
+                content: '# 📢 ATENÇÃO GODEVS!\nNovo desafio de construção liberado!', 
+                embeds: [embed] 
+            });
+
+            // 🔥 REGISTRA NO BANCO DE DADOS
+            await challengeService.recordDailyPost(
+                challenge.id,
+                channel.id,
+                mensagemEnviada.id
+            );
+
+            console.log(`✅ Desafio "${challenge.title}" postado com sucesso!`);
+            console.log(`📊 Registrado no banco de dados: Challenge #${challenge.id}`);
+
+            // Burlar trava de tipo para Crosspost em canais de anúncio
+            if (channel.type === (ChannelType.GuildAnnouncement as any)) {
+                await mensagemEnviada.crosspost().catch(() => null);
             }
-        }
-
-        if (!challenge) return;
-
-        const embed = new EmbedBuilder()
-            .setColor(0x2B2D31)
-            .setTitle(`🚀 Missão do Dia: ${challenge.title}`)
-            .setDescription(challenge.description)
-            .addFields({ name: '🛠️ Requisitos Técnicos:', value: challenge.requirements.map(req => `• ${req}`).join('\n') })
-            .addFields(
-                { name: '📊 Dificuldade:', value: `\`${challenge.difficulty}\``, inline: true },
-                { name: '🔗 Entrega:', value: '[Portal GoDevs](https://godevs.in100tiva.com)', inline: true }
-            )
-            .setFooter({ text: `Desafio ${challenge.id} de ${dailyChallenges.length} • GoDevs` })
-            .setTimestamp();
-
-        const mensagemEnviada = await channel.send({ 
-            content: '# 📢 ATENÇÃO GODEVS!\nNovo desafio de construção liberado!', 
-            embeds: [embed] 
-        });
-
-        console.log(`✅ Desafio "${challenge.title}" postado com sucesso!`);
-
-        // Burlar trava de tipo para Crosspost em canais de anúncio
-        if (channel.type === (ChannelType.GuildAnnouncement as any)) {
-            await mensagemEnviada.crosspost().catch(() => null);
-        }
         } catch (error: any) {
             if (error.code === 50013) {
                 console.error('❌ ERRO DE PERMISSÃO: O bot não tem permissão para enviar mensagens no canal #desafio!');
