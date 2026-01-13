@@ -169,5 +169,189 @@ export const dailyChallenges: Challenge[] = [
             "Mostre o modal apenas se o mouse sair por cima da página.",
             "Apareça apenas uma vez por sessão."
         ]
+    },
+    // ========== DESAFIOS COM FOCO EM JAVASCRIPT (16-30) ==========
+    // Fáceis (16-20): Conceitos básicos de JS
+    {
+        id: 16,
+        title: "Calculadora de Desconto com Try/Catch",
+        difficulty: 'Fácil',
+        description: "Crie uma seção de calculadora de desconto que trata erros de entrada inválida.",
+        requirements: [
+            "Crie campos para valor original e porcentagem de desconto.",
+            "Use try/catch para capturar erros quando o usuário digitar texto inválido.",
+            "No bloco catch, exiba uma mensagem de erro amigável na tela.",
+            "Use throw new Error() para lançar erro quando o valor for negativo."
+        ]
+    },
+    {
+        id: 17,
+        title: "Seletor de Planos com Switch",
+        difficulty: 'Fácil',
+        description: "Crie uma seção de planos (Básico/Pro/Premium) que muda dinamicamente com switch.",
+        requirements: [
+            "Crie 3 botões para selecionar o plano.",
+            "Use switch/case para definir preço e benefícios de cada plano.",
+            "Atualize o conteúdo da seção baseado no case selecionado.",
+            "Inclua um case default para plano não reconhecido."
+        ]
+    },
+    {
+        id: 18,
+        title: "Validador de Força de Senha com If/Else",
+        difficulty: 'Fácil',
+        description: "Crie um campo de senha com indicador visual de força usando estruturas condicionais.",
+        requirements: [
+            "Use if/else if/else para classificar: fraca (<6), média (6-10), forte (>10).",
+            "Mude a cor de uma barra de progresso (vermelho/amarelo/verde).",
+            "Exiba mensagem descritiva para cada nível de força.",
+            "Valide em tempo real com evento input."
+        ]
+    },
+    {
+        id: 19,
+        title: "Badges Dinâmicos com Operador Ternário",
+        difficulty: 'Fácil',
+        description: "Crie cards de produtos com badges que mudam dinamicamente usando operador ternário.",
+        requirements: [
+            "Crie cards com data-attributes (data-novo, data-popular, data-oferta).",
+            "Use operador ternário para decidir qual badge exibir.",
+            "Encadeie ternários para múltiplas condições.",
+            "Aplique cores diferentes para cada tipo de badge."
+        ]
+    },
+    {
+        id: 20,
+        title: "Gerador de Bio com Template Literals",
+        difficulty: 'Fácil',
+        description: "Crie uma seção 'Sobre Nós' com gerador de biografia usando template literals.",
+        requirements: [
+            "Crie inputs para nome, profissão e cidade.",
+            "Use template literals com ${} para interpolar as variáveis.",
+            "Gere um parágrafo formatado em tempo real conforme digita.",
+            "Inclua template literal multilinha com quebras de linha."
+        ]
+    },
+    // Médios (21-25): APIs e manipulação de arrays
+    {
+        id: 21,
+        title: "Busca de CEP com Fetch API",
+        difficulty: 'Médio',
+        description: "Crie uma seção de contato que preenche o endereço automaticamente ao digitar o CEP.",
+        requirements: [
+            "Use fetch() para consultar a API ViaCEP (viacep.com.br/ws/CEP/json).",
+            "Preencha automaticamente os campos de rua, bairro e cidade.",
+            "Use .then() e .catch() para tratar a Promise.",
+            "Exiba mensagem de erro se o CEP não for encontrado."
+        ]
+    },
+    {
+        id: 22,
+        title: "Conversor de Moeda com Axios",
+        difficulty: 'Médio',
+        description: "Crie uma seção de preços com conversor de moeda em tempo real usando Axios.",
+        requirements: [
+            "Importe e use axios para fazer a requisição HTTP.",
+            "Consulte uma API de cotação (ex: economia.awesomeapi.com.br).",
+            "Exiba um loading spinner enquanto a requisição está em andamento.",
+            "Converta e exiba o valor em pelo menos 2 moedas diferentes."
+        ]
+    },
+    {
+        id: 23,
+        title: "Cards de Serviços com Array.map()",
+        difficulty: 'Médio',
+        description: "Crie uma seção de serviços onde os cards são gerados dinamicamente a partir de um array.",
+        requirements: [
+            "Crie um array de objetos com {id, titulo, descricao, icone}.",
+            "Use .map() para transformar cada objeto em HTML de card.",
+            "Insira o resultado no DOM usando innerHTML ou insertAdjacentHTML.",
+            "Cada card deve ter um botão funcional."
+        ]
+    },
+    {
+        id: 24,
+        title: "Filtro de Produtos por Preço com Array.filter()",
+        difficulty: 'Médio',
+        description: "Crie uma seção de produtos com filtro de faixa de preço usando filter().",
+        requirements: [
+            "Crie um array de produtos com {nome, preco, imagem}.",
+            "Adicione inputs de preço mínimo e máximo.",
+            "Use .filter() para mostrar apenas produtos dentro do range.",
+            "Atualize a exibição em tempo real ao mudar os valores."
+        ]
+    },
+    {
+        id: 25,
+        title: "Resumo de Pedido com Destructuring",
+        difficulty: 'Médio',
+        description: "Crie uma seção de checkout que exibe resumo do pedido usando destructuring.",
+        requirements: [
+            "Crie um objeto complexo com dados do pedido (cliente, itens, endereço).",
+            "Use destructuring de objetos para extrair {nome, email} do cliente.",
+            "Use destructuring de arrays para pegar o primeiro e último item.",
+            "Exiba o resumo formatado usando os valores extraídos."
+        ]
+    },
+    // Difíceis (26-30): Conceitos avançados de JS
+    {
+        id: 26,
+        title: "Galeria de Fotos com Async/Await",
+        difficulty: 'Difícil',
+        description: "Crie uma galeria que carrega imagens de uma API externa usando async/await.",
+        requirements: [
+            "Crie uma função async para buscar dados da API.",
+            "Use await com fetch para aguardar a resposta.",
+            "Implemente try/catch dentro da função async para erros.",
+            "Exiba loading spinner e substitua pelas imagens quando carregar."
+        ]
+    },
+    {
+        id: 27,
+        title: "Dashboard com Promise.all()",
+        difficulty: 'Difícil',
+        description: "Crie uma seção de dashboard que carrega múltiplos dados simultaneamente.",
+        requirements: [
+            "Faça pelo menos 3 requisições fetch para endpoints diferentes.",
+            "Use Promise.all() para executar todas em paralelo.",
+            "Renderize todos os dados apenas quando TODAS as promises resolverem.",
+            "Implemente tratamento de erro com Promise.allSettled() como fallback."
+        ]
+    },
+    {
+        id: 28,
+        title: "Carrinho de Compras com Array.reduce()",
+        difficulty: 'Difícil',
+        description: "Crie uma seção de carrinho que calcula totais usando reduce().",
+        requirements: [
+            "Crie array de itens com {nome, preco, quantidade}.",
+            "Use .reduce() para calcular o subtotal (soma de preco * quantidade).",
+            "Aplique desconto percentual usando outro reduce.",
+            "Exiba subtotal, desconto e total final formatados como moeda."
+        ]
+    },
+    {
+        id: 29,
+        title: "Sistema de Favoritos com Closures",
+        difficulty: 'Difícil',
+        description: "Crie uma seção de produtos com sistema de favoritos usando closures.",
+        requirements: [
+            "Crie uma função factory que retorna um objeto com métodos.",
+            "Use closure para manter o array de favoritos privado.",
+            "Implemente métodos add(id), remove(id), getAll() e has(id).",
+            "Os botões de coração devem usar esses métodos para gerenciar favoritos."
+        ]
+    },
+    {
+        id: 30,
+        title: "Sistema de Notificações com Classes ES6",
+        difficulty: 'Difícil',
+        description: "Crie um sistema de toast notifications usando Classes e herança.",
+        requirements: [
+            "Crie uma classe base Notification com constructor(message, duration).",
+            "Implemente métodos show(), hide() e auto-dismiss com setTimeout.",
+            "Crie classes filhas SuccessNotification, ErrorNotification, WarningNotification.",
+            "Cada tipo deve ter estilo visual diferente usando herança e super()."
+        ]
     }
 ];
