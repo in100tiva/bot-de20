@@ -355,3 +355,36 @@ export const dailyChallenges: Challenge[] = [
         ]
     }
 ];
+
+// ========== CATEGORIAS DE DESAFIOS PARA BADGES ==========
+// Mapeamento de IDs de desafios por categoria (usado para badges SPECIAL)
+export const challengeCategories = {
+    // Desafios simples (DOM e interatividade)
+    dom: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    
+    // Desafios JavaScript (conceitos específicos)
+    javascript: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+    
+    // Categorias temáticas para badges SPECIAL
+    tryCatch: [16, 26],              // Error Handler - desafios com try/catch
+    api: [21, 22, 26, 27],           // API Explorer - desafios com consumo de API
+    arrayMethods: [23, 24, 28],      // Array Master - desafios com map/filter/reduce
+    async: [26, 27],                 // Async Ninja - desafios com async/await ou Promises
+    classes: [30],                   // OOP Architect - desafios com Classes ES6
+};
+
+// Função auxiliar para verificar se um desafio pertence a uma categoria
+export function isChallengeInCategory(challengeId: number, category: keyof typeof challengeCategories): boolean {
+    return challengeCategories[category].includes(challengeId);
+}
+
+// Função para obter todas as categorias de um desafio
+export function getChallengeCategories(challengeId: number): string[] {
+    const categories: string[] = [];
+    for (const [category, ids] of Object.entries(challengeCategories)) {
+        if (ids.includes(challengeId)) {
+            categories.push(category);
+        }
+    }
+    return categories;
+}

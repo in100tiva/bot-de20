@@ -91,6 +91,20 @@ model GoDevsActivity {
   @@index([syncedAt])
 }
 
+// Modelo de desafios completados pelos usuários
+model CompletedChallenge {
+  id          String   @id @default(cuid())
+  discordId   String                        // Discord ID do usuário
+  challengeId Int                           // ID do desafio no array dailyChallenges
+  completedAt DateTime @default(now())
+  messageUrl  String?                       // Link da mensagem de entrega
+  
+  @@unique([discordId, challengeId])
+  @@map("completed_challenges")
+  @@index([discordId])
+  @@index([challengeId])
+}
+
 // Enums
 enum BadgeType {
   PARTICIPATION  // Por número de desafios

@@ -40,6 +40,9 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
         }
 
         else if (commandName === 'status') {
+            // Responde em até 3s para o Discord; consulta ao banco pode demorar
+            await interaction.deferReply({ ephemeral: true });
+
             // 🔥 AGORA USA O BANCO DE DADOS PRISMA
             const postedChallenges = await prisma.dailyPost.findMany({
                 select: { challengeId: true },
@@ -69,7 +72,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 .setFooter({ text: 'Use /desafio para enviar manualmente • Dados do banco Prisma' })
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.editReply({ embeds: [embed] });
         }
 
         else if (commandName === 'adicionar') {
@@ -83,15 +86,16 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 return;
             }
 
+            await interaction.deferReply({ ephemeral: true });
+
             // 🔥 VERIFICA NO BANCO DE DADOS
             const alreadyPosted = await prisma.dailyPost.findFirst({
                 where: { challengeId: id }
             });
 
             if (alreadyPosted) {
-                await interaction.reply({
-                    content: `⚠️ O desafio #${id} já foi postado em ${new Date(alreadyPosted.postedAt).toLocaleDateString()}!`,
-                    ephemeral: true
+                await interaction.editReply({
+                    content: `⚠️ O desafio #${id} já foi postado em ${new Date(alreadyPosted.postedAt).toLocaleDateString()}!`
                 });
                 return;
             }
@@ -106,19 +110,19 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
                 }
             });
 
-            await interaction.reply({
-                content: `✅ Desafio #${id} marcado como enviado no banco de dados!`,
-                ephemeral: true
+            await interaction.editReply({
+                content: `✅ Desafio #${id} marcado como enviado no banco de dados!`
             });
         }
 
         else if (commandName === 'limpar') {
+            await interaction.deferReply({ ephemeral: true });
+
             // 🔥 LIMPA O BANCO DE DADOS
             const deleted = await prisma.dailyPost.deleteMany({});
             
-            await interaction.reply({
-                content: `✅ Histórico de desafios limpo! ${deleted.count} registros removidos do banco de dados. Todos os desafios estão disponíveis novamente.`,
-                ephemeral: true
+            await interaction.editReply({
+                content: `✅ Histórico de desafios limpo! ${deleted.count} registros removidos do banco de dados. Todos os desafios estão disponíveis novamente.`
             });
         }
 
