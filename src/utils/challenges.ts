@@ -353,6 +353,126 @@ export const dailyChallenges: Challenge[] = [
             "Crie classes filhas SuccessNotification, ErrorNotification, WarningNotification.",
             "Cada tipo deve ter estilo visual diferente usando herança e super()."
         ]
+    },
+    // ========== DESAFIOS 31-40 (Acessibilidade, Performance, Formulários avançados) ==========
+    {
+        id: 31,
+        title: "Máscara de Telefone e CPF em Input",
+        difficulty: 'Fácil',
+        description: "Aplique máscara em tempo real em campos de telefone e CPF na seção de contato.",
+        requirements: [
+            "Use o evento input nos campos de telefone e CPF.",
+            "Formate telefone como (XX) XXXXX-XXXX ou (XX) XXXX-XXXX conforme a quantidade de dígitos.",
+            "Formate CPF como XXX.XXX.XXX-XX.",
+            "Armazene ou valide apenas os números (sem formatação).",
+            "Use regex ou substituição de strings para aplicar as máscaras."
+        ]
+    },
+    {
+        id: 32,
+        title: "Menu Mobile (Hamburger) com JS",
+        difficulty: 'Fácil',
+        description: "Crie um ícone hamburger que abre e fecha o menu em viewport pequena.",
+        requirements: [
+            "Exiba o botão hamburger apenas em mobile (media query ou classe).",
+            "Ao clicar no hamburger, alterne uma classe no menu (ex.: open) para mostrar/ocultar.",
+            "Use animação ou transição CSS na abertura e fechamento.",
+            "Opcional: feche o menu ao clicar em um link do menu."
+        ]
+    },
+    {
+        id: 33,
+        title: "Skip Link e Foco por Teclado",
+        difficulty: 'Fácil',
+        description: "Implemente um link 'Pular para o conteúdo' e indicador visual de foco para navegação por teclado.",
+        requirements: [
+            "Crie um link skip no início da página, visível apenas ao receber foco.",
+            "Ao ativar o link, mova o foco para o conteúdo principal com focus().",
+            "Aplique estilos :focus-visible em botões e links para destacar o elemento focado."
+        ]
+    },
+    {
+        id: 34,
+        title: "Busca com Debounce",
+        difficulty: 'Médio',
+        description: "Crie um campo de busca que dispara a filtragem apenas após o usuário parar de digitar.",
+        requirements: [
+            "Use setTimeout (ou uma função debounce) para atrasar a execução da busca.",
+            "Cancele o timeout anterior a cada nova tecla digitada.",
+            "Sugestão de tempo de espera: 300 a 500 ms.",
+            "Aplique a busca em uma lista existente (ex.: benefícios ou produtos)."
+        ]
+    },
+    {
+        id: 35,
+        title: "Formulário Multi-Step (Etapas)",
+        difficulty: 'Médio',
+        description: "Crie um formulário dividido em 2 ou 3 etapas com botões Próximo e Voltar.",
+        requirements: [
+            "Exiba apenas uma etapa por vez (oculte as demais com CSS ou JS).",
+            "O botão Próximo valide os campos da etapa atual antes de avançar.",
+            "O botão Voltar não precisa validar, apenas retorna à etapa anterior.",
+            "Mostre indicador visual de progresso (ex.: Etapa 1 de 3)."
+        ]
+    },
+    {
+        id: 36,
+        title: "Lazy Loading de Imagens com Intersection Observer",
+        difficulty: 'Médio',
+        description: "Carregue imagens apenas quando entrarem na área visível da tela (viewport).",
+        requirements: [
+            "Use IntersectionObserver para detectar quando a imagem entra no viewport.",
+            "Armazene a URL real em data-src e deixe src vazio ou com placeholder.",
+            "Ao entrar no viewport, copie data-src para src para disparar o carregamento.",
+            "Opcional: use unobserve após carregar para parar de observar."
+        ]
+    },
+    {
+        id: 37,
+        title: "Breadcrumb Dinâmico conforme Rota/Seção",
+        difficulty: 'Médio',
+        description: "Crie um breadcrumb que reflete a seção ou 'rota' atual da página (single-page).",
+        requirements: [
+            "Defina um array ou objeto com a estrutura da página (ex.: Início > Serviços > Web).",
+            "Ao rolar ou clicar em seções, atualize o breadcrumb no DOM.",
+            "O último item pode ser texto apenas (sem link) ou com estilo diferente."
+        ]
+    },
+    {
+        id: 38,
+        title: "Quiz de Múltipla Escolha com Contador de Acertos",
+        difficulty: 'Difícil',
+        description: "Crie um quiz com várias perguntas, alternativas e feedback ao final.",
+        requirements: [
+            "Tenha um array de perguntas com pergunta, opcoes e indice ou valor da opção correta.",
+            "Renderize uma pergunta por vez ou todas; ao submeter, conte os acertos.",
+            "Exiba o resultado final (ex.: X de Y acertos) e opção de reiniciar o quiz."
+        ]
+    },
+    {
+        id: 39,
+        title: "Envio de Formulário de Contato com Fetch (POST)",
+        difficulty: 'Difícil',
+        description: "Crie um formulário de contato que envia os dados via fetch para uma API ou endpoint de teste.",
+        requirements: [
+            "Intercepte o submit e use preventDefault().",
+            "Use fetch com método POST, header Content-Type: application/json e body JSON.stringify(dados).",
+            "Exiba um estado de loading durante o envio.",
+            "Trate resposta de sucesso e erro exibindo mensagem na tela.",
+            "Use endpoint de teste (ex.: JSONPlaceholder) se não tiver backend."
+        ]
+    },
+    {
+        id: 40,
+        title: "Carrinho Persistente com localStorage",
+        difficulty: 'Difícil',
+        description: "Crie um carrinho que mantém os itens ao recarregar a página usando localStorage.",
+        requirements: [
+            "Ao adicionar ou remover item, atualize o array no localStorage.",
+            "Ao carregar a página, leia do localStorage e renderize o carrinho.",
+            "Calcule e exiba o total (subtotal ou total geral).",
+            "Sugestão de estrutura do item: { id, nome, preco, quantidade }."
+        ]
     }
 ];
 
@@ -360,17 +480,21 @@ export const dailyChallenges: Challenge[] = [
 // Mapeamento de IDs de desafios por categoria (usado para badges SPECIAL)
 export const challengeCategories = {
     // Desafios simples (DOM e interatividade)
-    dom: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    dom: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 32, 33, 37],
     
     // Desafios JavaScript (conceitos específicos)
     javascript: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
     
     // Categorias temáticas para badges SPECIAL
     tryCatch: [16, 26],              // Error Handler - desafios com try/catch
-    api: [21, 22, 26, 27],           // API Explorer - desafios com consumo de API
-    arrayMethods: [23, 24, 28],      // Array Master - desafios com map/filter/reduce
-    async: [26, 27],                 // Async Ninja - desafios com async/await ou Promises
-    classes: [30],                   // OOP Architect - desafios com Classes ES6
+    api: [21, 22, 26, 27, 39],      // API Explorer - desafios com consumo/envio de API
+    arrayMethods: [23, 24, 28],     // Array Master - desafios com map/filter/reduce
+    async: [26, 27],                // Async Ninja - desafios com async/await ou Promises
+    classes: [30],                  // OOP Architect - desafios com Classes ES6
+    accessibility: [33],            // Acessibilidade - skip link, foco teclado
+    performance: [34, 36],          // Performance - debounce, lazy loading
+    forms: [31, 35],                // Formulários avançados - máscara, multi-step
+    storage: [40],                  // Estado persistente - localStorage
 };
 
 // Função auxiliar para verificar se um desafio pertence a uma categoria
