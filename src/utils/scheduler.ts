@@ -114,20 +114,24 @@ export const startScheduler = (client: Client) => {
     
     // 📅 Desafio diário às 02:40
     cron.schedule('0 40 2 * * *', async () => {
-        console.log("⏰ Disparando postagem automática (02:40)...");
-        await postarDesafio(client);
+        try {
+            console.log("⏰ Disparando postagem automática (02:40)...");
+            await postarDesafio(client);
+        } catch (error: any) {
+            console.error('❌ Erro no cron de desafio (02:40):', error?.message || error);
+        }
     }, { 
         timezone: "America/Sao_Paulo"
     });
 
     // 📊 TOP 3 diário às 14:30
     cron.schedule('0 30 14 * * *', async () => {
-        console.log("📊 Disparando ranking diário (14:30)...");
         try {
+            console.log("📊 Disparando ranking diário (14:30)...");
             const ranking = await userService.getFullRanking(10);
             await postWeeklyTop3(client, ranking);
         } catch (error: any) {
-            console.error('❌ Erro ao postar ranking:', error.message);
+            console.error('❌ Erro ao postar ranking:', error?.message || error);
         }
     }, { 
         timezone: "America/Sao_Paulo"

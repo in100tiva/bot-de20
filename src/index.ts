@@ -7,6 +7,15 @@ import { badgeService } from './lib/prisma.js';
 
 dotenv.config();
 
+// Evita que o processo caia por erros não tratados (ex.: DB fora, timeout no cron)
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ unhandledRejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('⚠️ uncaughtException:', err.message || err);
+});
+
 const PORT = process.env.PORT || 8080;
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -43,16 +52,24 @@ client.once('clientReady', async (c) => {
 
 // Comandos Slash (/) e Botões
 client.on('interactionCreate', async (interaction) => {
-    // Comandos slash
-    if (interaction.isChatInputCommand()) {
-        await handleSlashCommands(interaction, client);
-        return;
-    }
-    
-    // Botões interativos
-    if (interaction.isButton()) {
-        await handleButtonInteraction(interaction, client);
-        return;
+    try {
+        if (interaction.isChatInputCommand()) {
+            await handleSlashCommands(interaction, client);
+            return;
+        }
+        if (interaction.isButton()) {
+            await handleButtonInteraction(interaction, client);
+            return;
+        }
+    } catch (err: any) {
+        console.error('❌ Erro em interactionCreate:', err?.message || err);
+        try {
+            if (interaction.deferred) {
+                await interaction.editReply({ content: '❌ Ocorreu um erro. Tente novamente.' }).catch(() => null);
+            } else if (!interaction.replied) {
+                await interaction.reply({ content: '❌ Ocorreu um erro. Tente novamente.', ephemeral: true }).catch(() => null);
+            }
+        } catch (_) {}
     }
 });
 
