@@ -25,11 +25,15 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
         return;
     }
 
+    // Responde ao Discord em até 3s para comandos que usam banco (evita "O aplicativo não respondeu")
+    const needsDefer = ['desafio', 'status', 'adicionar', 'limpar'].includes(commandName);
+    if (needsDefer) {
+        await interaction.deferReply({ ephemeral: true });
+    }
+
     try {
         if (commandName === 'desafio') {
             const id = interaction.options.get('id')?.value as number | undefined;
-            
-            await interaction.deferReply({ ephemeral: true });
             await postarDesafio(client, id || null);
             
             await interaction.editReply({
@@ -40,10 +44,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
         }
 
         else if (commandName === 'status') {
-            // Responde em até 3s para o Discord; consulta ao banco pode demorar
-            await interaction.deferReply({ ephemeral: true });
-
-            // 🔥 AGORA USA O BANCO DE DADOS PRISMA
+            // 🔥 USA O BANCO DE DADOS PRISMA (defer já foi feito acima)
             const postedChallenges = await prisma.dailyPost.findMany({
                 select: { challengeId: true },
                 distinct: ['challengeId'],
@@ -79,16 +80,13 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
             const id = interaction.options.get('id')?.value as number;
             
             if (!dailyChallenges.find(c => c.id === id)) {
-                await interaction.reply({
-                    content: `❌ Desafio com ID \`${id}\` não existe! IDs válidos: 1 a ${dailyChallenges.length}`,
-                    ephemeral: true
+                await interaction.editReply({
+                    content: `❌ Desafio com ID \`${id}\` não existe! IDs válidos: 1 a ${dailyChallenges.length}`
                 });
                 return;
             }
 
-            await interaction.deferReply({ ephemeral: true });
-
-            // 🔥 VERIFICA NO BANCO DE DADOS
+            // 🔥 VERIFICA NO BANCO DE DADOS (defer já foi feito acima)
             const alreadyPosted = await prisma.dailyPost.findFirst({
                 where: { challengeId: id }
             });
@@ -116,9 +114,7 @@ export const handleSlashCommands = async (interaction: ChatInputCommandInteracti
         }
 
         else if (commandName === 'limpar') {
-            await interaction.deferReply({ ephemeral: true });
-
-            // 🔥 LIMPA O BANCO DE DADOS
+            // 🔥 LIMPA O BANCO DE DADOS (defer já foi feito acima)
             const deleted = await prisma.dailyPost.deleteMany({});
             
             await interaction.editReply({
