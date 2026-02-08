@@ -64,10 +64,20 @@ client.on('interactionCreate', async (interaction) => {
     } catch (err: any) {
         console.error('❌ Erro em interactionCreate:', err?.message || err);
         try {
-            if (interaction.deferred) {
-                await interaction.editReply({ content: '❌ Ocorreu um erro. Tente novamente.' }).catch(() => null);
-            } else if (!interaction.replied) {
-                await interaction.reply({ content: '❌ Ocorreu um erro. Tente novamente.', ephemeral: true }).catch(() => null);
+            if (interaction.isChatInputCommand()) {
+                const cmd = interaction;
+                if (cmd.deferred) {
+                    await cmd.editReply({ content: '❌ Ocorreu um erro. Tente novamente.' }).catch(() => null);
+                } else if (!cmd.replied) {
+                    await cmd.reply({ content: '❌ Ocorreu um erro. Tente novamente.', ephemeral: true }).catch(() => null);
+                }
+            } else if (interaction.isButton()) {
+                const btn = interaction;
+                if (btn.deferred) {
+                    await btn.editReply({ content: '❌ Ocorreu um erro. Tente novamente.' }).catch(() => null);
+                } else if (!btn.replied) {
+                    await btn.reply({ content: '❌ Ocorreu um erro. Tente novamente.', ephemeral: true }).catch(() => null);
+                }
             }
         } catch (_) {}
     }
